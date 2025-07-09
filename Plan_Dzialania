@@ -1,0 +1,15 @@
+Co zostało do zrobienia:
+Podstawowe:
+- wpisanie ograniczeń do macierzy poprawne - nadal nie
+- przepisanie ograniczenia który generuje slack variables chodzi o 2 - nadal nie
+- upewnienie się że sieć grafowa działa poprawnie sprawdź
+- dodanie ograniczenia wyboru 1
+
+Średnie:
+- dobierz kary za pomocą nealdera meada
+- dobierz neurony za pomocą czerwonienki
+- pobierz dane dla biskupina
+
+Trudne:
+- dostosuj dane dla wrocławia
+- stwórz wizualizacje

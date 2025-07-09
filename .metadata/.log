@@ -1,0 +1,18 @@
+!SESSION 2025-05-07 17:38:48.423 -----------------------------------------------
+eclipse.buildId=Build Community Edition
+java.fullversion=17.0.9+9
+JRE 17 Windows 11 amd64-64-Bit Compressed References 20231017_542 (JIT enabled, AOT enabled)
+OpenJ9   - 461bf3c70
+OMR      - 5eee6ad9d
+JCL      - 356287fbde7 based on jdk-17.0.9+9
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=pl_PL
+Command-line arguments:  -os win32 -ws win32 -arch x86_64 -clean
+
+!ENTRY org.eclipse.ui 2 2 2025-05-07 17:49:39.402
+!MESSAGE Invalid preference category path: org.eclipse.wst.html.ui.preferences.web (bundle: org.eclipse.wst.jsdt.ui, page: org.eclipse.wst.jsdt.ui.preferences.JavaBasePreferencePage)
+
+!ENTRY ilog.odms.ide.ui 1 0 2025-05-07 17:49:39.599
+!MESSAGE C:\Program Files\IBM\ILOG\CPLEX_Studio_Community2212\cplex\bin\x64_win64\cpxchecklic.exe: Exiting with code 1
+
+!ENTRY ilog.odms.ide.opllang 1 0 2025-05-07 17:50:02.346
+!MESSAGE concert_wrap.IloEndMT
