@@ -1,9 +1,10 @@
 Co zostało do zrobienia:
 Podstawowe:
-- wpisanie ograniczeń do macierzy poprawne - nadal nie
-- przepisanie ograniczenia który generuje slack variables chodzi o 2 - nadal nie
+- wpisanie ograniczeń do macierzy poprawne - zweryfikowałem wydaje mi się że jest poprawnie
+- przepisanie ograniczenia który generuje slack variables chodzi o 2 - jest to mało możliwe póki co zastosowałem pół-środek
+z przypisaniem konkretnej liczby budynków do schronu przez co wygenerujemy mniej zmiennych
 - upewnienie się że sieć grafowa działa poprawnie sprawdź
-- dodanie ograniczenia wyboru 1
+- dodanie ograniczenia wyboru 1 - czy jest ono poprawne nadal nie wiem
 
 Średnie:
 - dobierz kary za pomocą nealdera meada
