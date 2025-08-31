@@ -119,7 +119,7 @@ def format_solution(bitlist, objective, budget, L_new, L_existing, M, c, y_offse
 
 def get_shelter_allocation(budget: int):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    data = pd.read_csv("controllers/data/schrony-csv.csv")
+    data = pd.read_csv("../../Notebooks/data/schrony-csv.csv")
 
     data = data[
         (data["County"] == "Wrocław") &
