@@ -119,7 +119,7 @@ def format_solution(bitlist, objective, budget, L_new, L_existing, M, c, y_offse
 
 def get_shelter_allocation(budget: int):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    data = pd.read_csv("../../Notebooks/data/schrony-csv.csv")
+    data = pd.read_csv("C:\\Users\\jakub\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\schrony-csv.csv")
 
     data = data[
         (data["County"] == "Wrocław") &
@@ -128,24 +128,24 @@ def get_shelter_allocation(budget: int):
         (data["x"] >= 17.068503) & (data["x"] <= 17.123730)  # longitude
         ].dropna()
 
-    s = 0
+    s = 6
     h = 50
     p = 15
-    P = [40, 4, 4, 40]
+    P = [100, 10, 10, 100]
     e = len(data)
 
     L_new = [
-        #[51.103504, 17.086370],
-        #[51.100217, 17.082551],
-        #[51.100390, 17.099490],
-        #[51.100590, 17.0590],
-        #[51.100190, 17.079490],
-        #[51.100590, 17.059490]
+        [51.103504, 17.086370],
+        [51.100217, 17.082551],
+        [51.100390, 17.099490],
+        [51.100590, 17.0590],
+        [51.100190, 17.079490],
+        [51.100590, 17.059490]
     ]
 
     L_existing = data[["y", "x"]].values.tolist()
 
-    L =  L_existing
+    L = L_new + L_existing
 
     # Koszty i pojemności
     c = [2, 2, 4, 6, 8, 1] + [0] * e
@@ -154,6 +154,7 @@ def get_shelter_allocation(budget: int):
     slack_sizes = [math.floor(math.log2(vi)) for vi in v]  # za pojemności schronów
     slack_sizes.append(math.floor(math.log2(p)))  # za budżet
 
+    # losowanie obiektów mieszkalnych
     np.random.seed(42)
     lat_range = (51.101153, 51.127456)
     lon_range = (17.068503, 17.123730)

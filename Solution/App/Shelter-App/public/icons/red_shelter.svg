@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="schron">
+  <!-- prosty blok jako schron -->
+  <rect x="20" y="48" width="88" height="44" rx="4" fill="#d62828" stroke="#7a0f0f" stroke-width="3"></rect>
+  
+  <!-- wejście -->
+  <rect x="56" y="62" width="16" height="20" rx="2" fill="#ffffff" stroke="#7a0f0f" stroke-width="2"></rect>
+</svg>

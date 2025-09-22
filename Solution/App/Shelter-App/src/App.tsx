@@ -30,7 +30,7 @@ function App() {
     setError(null);
 
     try {
-      if (!form.budget) {
+      if (!form.budget || !form.model) {
         throw new Error("Proszę wypełnić wszystkie pola");
       }
 
@@ -39,7 +39,8 @@ function App() {
       }
 
       const request: ShelterAllocationRequest = {
-        budget: parseFloat(form.budget)
+        budget: parseFloat(form.budget),
+        model: form.model
       };
 
       const response = await apiService.getShelterAllocations(request);
@@ -78,6 +79,11 @@ function App() {
               value={form.budget}
               onChange={(e) => setForm({ ...form, budget: e.target.value })}
             />
+
+            <select  className="rounded-full px-4 py-2 text-center text-gray-600 bg-white" onChange={(e) => setForm({ ...form, model: e.target.value })}>
+              <option value={"GNN"}>GNN</option>
+              <option value={"GUROBI"}>GUROBI</option>
+            </select>
 
             <button
               type="submit"

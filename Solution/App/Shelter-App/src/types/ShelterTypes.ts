@@ -17,4 +17,5 @@ export interface ShelterAllocationResponse {
 
 export interface ShelterAllocationRequest {
   budget: number;
+  model: string;
 }

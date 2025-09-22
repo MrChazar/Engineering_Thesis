@@ -1,0 +1,19 @@
+<!-- save as public/icons/block.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="blok">
+  <!-- transparent background -->
+  <rect x="18" y="22" width="92" height="84" rx="6" fill="#ffffff" stroke="#111111" stroke-width="4"></rect>
+  <!-- windows -->
+  <g fill="#111111" opacity="0.85">
+    <rect x="30" y="34" width="16" height="14" rx="2"></rect>
+    <rect x="56" y="34" width="16" height="14" rx="2"></rect>
+    <rect x="82" y="34" width="16" height="14" rx="2"></rect>
+
+    <rect x="30" y="56" width="16" height="14" rx="2"></rect>
+    <rect x="56" y="56" width="16" height="14" rx="2"></rect>
+    <rect x="82" y="56" width="16" height="14" rx="2"></rect>
+
+    <rect x="30" y="78" width="16" height="14" rx="2"></rect>
+    <rect x="56" y="78" width="16" height="14" rx="2"></rect>
+    <rect x="82" y="78" width="16" height="14" rx="2"></rect>
+  </g>
+</svg>
