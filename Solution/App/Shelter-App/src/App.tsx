@@ -63,8 +63,15 @@ function App() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <header className="bg-black text-primary font-bold px-6 py-4">
-        Shelter App
+      <header className="bg-black text-primary font-bold px-6 py-4 flex">
+        <div className="flex items-center gap-3">
+          <img
+            src="/icons/app_logo.png"
+            alt="Shelter App Logo"
+            className="w-7 h-7"
+          />
+          <h1 className="text-xl font-bold tracking-wide">Shelter App</h1>
+        </div>
       </header>
 
       <main className="flex flex-1 gap-4 p-6">

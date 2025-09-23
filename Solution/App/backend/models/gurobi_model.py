@@ -42,6 +42,7 @@ def get_shelter_allocation(budget: int):
     h = 50
     p = budget
     K = 5
+    d = 1
 
     np.random.seed(42)
     lat_range = (51.101153, 51.127456)
@@ -92,6 +93,12 @@ def get_shelter_allocation(budget: int):
     # ograniczenia – pojemności
     for i in range(s + e):
         model.addConstr(quicksum(x[(i, n)] for n in range(h)) <= v[i] * y[i], name=f"cap_{i}")
+
+    # ograniczenie – maksymalna odległość
+    for i in range(s + e):
+        for n in range(h):
+            if r[i, n] > d:
+                model.addConstr(x[(i, n)] == 0, name=f"dist_{i}_{n}")
 
     # budżet
     model.addConstr(quicksum(c[i] * y[i] for i in range(s + e)) <= p, name="budget")
