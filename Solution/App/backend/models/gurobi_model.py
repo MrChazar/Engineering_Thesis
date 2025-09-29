@@ -12,10 +12,17 @@ from geopy.distance import geodesic
 from gurobipy import Model, GRB, quicksum
 
 
-def get_shelter_allocation(budget: int):
+def get_shelter_allocation(budget: float, allowedDistance: float):
     data = pd.read_csv(
         "C:\\Users\\jakub\\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\schrony-csv.csv"
     )
+
+    residental_data = pd.read_csv(
+        "C:\\Users\\jakub\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\residental_buildings.csv",
+        sep=";")
+
+    residental_data = residental_data[0:150]
+
 
     data = data[
         (data["County"] == "Wrocław") &
@@ -39,18 +46,12 @@ def get_shelter_allocation(budget: int):
 
     s = len(L_new)
     e = len(L_existing)
-    h = 50
+    h = len(residental_data)
     p = budget
     K = 5
-    d = 1
+    d = allowedDistance
 
-    np.random.seed(42)
-    lat_range = (51.101153, 51.127456)
-    lon_range = (17.068503, 17.123730)
-    M = [
-        [np.random.uniform(*lat_range), np.random.uniform(*lon_range)]
-        for _ in range(h)
-    ]
+    M = residental_data[["x", "y"]].values.tolist()
 
     # Odległości r_{i,n}
     r = [[geodesic(l, m).kilometers for m in M] for l in L]

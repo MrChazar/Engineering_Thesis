@@ -117,7 +117,7 @@ def format_solution(bitlist, objective, budget, L_new, L_existing, M, c, y_offse
     }
 
 
-def get_shelter_allocation(budget: int):
+def get_shelter_allocation(budget: float, allowedDistance: float):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     data = pd.read_csv("C:\\Users\\jakub\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\schrony-csv.csv")
 

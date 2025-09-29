@@ -3,7 +3,7 @@ import {type PointType, type AllocationPoint, type ShelterAllocationResponse, ty
 export const apiService = {
   async getShelterAllocations(params: ShelterAllocationRequest): Promise<ShelterAllocationResponse> {
 
-    const response = await fetch(`http://localhost:8000/shelter/allocations/${params.budget}/${params.model}`);
+    const response = await fetch(`http://localhost:8000/shelter/allocations/${params.budget}/${params.allowedDistance}/${params.model}`);
     window.console.log(response);
     
     if (!response.ok) {

@@ -10,6 +10,7 @@ function App() {
   const [form, setForm] = useState({
     model: "",
     budget: "",
+    allowedDistance: ""
   });
 
   const [loading, setLoading] = useState(false);
@@ -30,7 +31,7 @@ function App() {
     setError(null);
 
     try {
-      if (!form.budget || !form.model) {
+      if (!form.budget || form.model == "") {
         throw new Error("Proszę wypełnić wszystkie pola");
       }
 
@@ -40,7 +41,8 @@ function App() {
 
       const request: ShelterAllocationRequest = {
         budget: parseFloat(form.budget),
-        model: form.model
+        model: form.model,
+        allowedDistance: parseFloat(form.allowedDistance)
       };
 
       const response = await apiService.getShelterAllocations(request);
@@ -48,7 +50,7 @@ function App() {
       setAllocations({
         points: response.points,
         objective: response.objective,
-      used_budget: response.used_budget
+        used_budget: response.used_budget
       });
       
       console.log("Otrzymane alokacje:", allocations);
@@ -76,7 +78,7 @@ function App() {
 
       <main className="flex flex-1 gap-4 p-6">
         <section className="flex-1 bg-primary rounded-2xl p-6 flex flex-col">
-          <h2 className="text-center font-bold text-black mb-6">Parametry Procesu</h2>
+          <h1 className="text-center font-bold text-black mb-6">Parametry Procesu</h1>
           <form className="flex flex-col gap-4 flex-1" onSubmit={e => FormSubmit(e)}>
 
             <input
@@ -87,7 +89,16 @@ function App() {
               onChange={(e) => setForm({ ...form, budget: e.target.value })}
             />
 
+            <input
+              type="number"
+              placeholder="Maksymalna dozw. odległość (km)"
+              className="rounded-full px-4 py-2 text-center text-gray-600 bg-white"
+              value={form.allowedDistance}
+              onChange={(e) => setForm({ ...form, allowedDistance: e.target.value })}
+            />
+
             <select  className="rounded-full px-4 py-2 text-center text-gray-600 bg-white" onChange={(e) => setForm({ ...form, model: e.target.value })}>
+              <option value={""}>Wybierz model rozwiązania</option>
               <option value={"GNN"}>GNN</option>
               <option value={"GUROBI"}>GUROBI</option>
             </select>
@@ -100,15 +111,15 @@ function App() {
             </button>
           </form>
           {error ?
-            <p className="text-red-600">{error}</p>
+            <h1 className="text-red-600 center">Błąd: {error}</h1>
             : <></>
           }
         </section>
 
         <section className="flex-[2] bg-primary rounded-2xl p-6">
-          <h2 className="text-center text-black font-bold mb-6">Wizualizacja</h2>
-
-          {allocations?.objective && allocations.used_budget && allocations.points ?
+          <h1 className="text-center text-black font-bold mb-6">Wizualizacja</h1>
+          
+          {allocations?.objective && allocations.used_budget >= 0 && allocations.points ?
           <>
             <div className="w-full h-[400px] rounded-xl overflow-hidden relative">
               <Map data={allocations}></Map>
@@ -123,8 +134,6 @@ function App() {
           <h2 className="text-red-600">Ładowanie...</h2>
           : <></>
           }
-
-          
           
         </section>
       </main>

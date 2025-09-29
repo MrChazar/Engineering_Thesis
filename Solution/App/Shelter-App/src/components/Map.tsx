@@ -18,13 +18,14 @@ interface MapProps {
 }
 
 function Map({ data }: MapProps) {
+  debugger
   const layers = useMemo(() => {
     if (!data) return [];
 
     const potentialShelters = data.points.filter(p => p.type === "potential_shelter");
     const builtShelters = data.points.filter(p => p.type === "built_shelter");
     const apartments = data.points.filter(p => p.type === "apartment");
-
+    
     const lines = apartments
       .filter(a => a.assigned_to !== null)
       .map(a => {
