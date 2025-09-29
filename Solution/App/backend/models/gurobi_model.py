@@ -13,8 +13,14 @@ from gurobipy import Model, GRB, quicksum
 
 
 def get_shelter_allocation(budget: float, allowedDistance: float):
-    data = pd.read_csv(
-        "C:\\Users\\jakub\\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\schrony-csv.csv"
+
+    existing_shelter_data = pd.read_csv(
+        "C:\\Users\\jakub\\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\existing_shelters.csv"
+    )
+
+    new_shelter_data = pd.read_csv(
+        "C:\\Users\\jakub\\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\new_shelters.csv",
+        sep=";"
     )
 
     residental_data = pd.read_csv(
@@ -23,32 +29,24 @@ def get_shelter_allocation(budget: float, allowedDistance: float):
 
     residental_data = residental_data[0:150]
 
-
-    data = data[
-        (data["County"] == "Wrocław") &
-        ((data["FacilityType"] == "[1] - (S) - schron") |
-         (data["FacilityType"] == "[2] - (U) - ukrycie")) &
-        (data["y"] >= 51.101153) & (data["y"] <= 51.127456) &
-        (data["x"] >= 17.068503) & (data["x"] <= 17.123730)
+    existing_shelter_data = existing_shelter_data[
+        (existing_shelter_data["County"] == "Wrocław") &
+        ((existing_shelter_data["FacilityType"] == "[1] - (S) - schron") |
+         (existing_shelter_data["FacilityType"] == "[2] - (U) - ukrycie")) &
+        (existing_shelter_data["y"] >= 51.101153) & (existing_shelter_data["y"] <= 51.127456) &
+        (existing_shelter_data["x"] >= 17.068503) & (existing_shelter_data["x"] <= 17.123730)
     ].dropna()
 
     # Nowe i istniejące schrony
-    L_new = [
-        [51.103504, 17.086370],
-        [51.100217, 17.082551],
-        [51.100390, 17.099490],
-        [51.100590, 17.0590],
-        [51.100190, 17.079490],
-        [51.100590, 17.059490]
-    ]
-    L_existing = data[["y", "x"]].values.tolist()
+    L_existing = existing_shelter_data[["x", "y"]].values.tolist()
+    L_new = new_shelter_data[["x", "y"]].values.tolist()
     L = L_new + L_existing
 
     s = len(L_new)
     e = len(L_existing)
     h = len(residental_data)
     p = budget
-    K = 5
+    K = 100
     d = allowedDistance
 
     M = residental_data[["x", "y"]].values.tolist()
@@ -58,8 +56,8 @@ def get_shelter_allocation(budget: float, allowedDistance: float):
     r = np.array(r)
 
     # Koszty i pojemności
-    c = [2, 2, 4, 6, 8, 1] + [0] * e
-    v = [10, 4, 1, 5, 6, 4] + list(data["Capacity"] / 10)
+    c = list(new_shelter_data["cost"]) + [0] * e
+    v = list((new_shelter_data["capacity"] / 10).astype(int)) + list((existing_shelter_data["Capacity"] / 10).astype(int))
 
     model = Model("shelter_location")
 
@@ -129,8 +127,8 @@ def get_shelter_allocation(budget: float, allowedDistance: float):
                 "type": schron_type,
                 "cost": cost,
                 "assigned_to": None,
-                "x": coords[1],
-                "y": coords[0],
+                "x": coords[0],
+                "y": coords[1],
             })
             id_counter += 1
 
@@ -147,8 +145,8 @@ def get_shelter_allocation(budget: float, allowedDistance: float):
                 "type": "apartment",
                 "cost": None,
                 "assigned_to": assigned_to,
-                "x": coords[1],
-                "y": coords[0],
+                "x": coords[0],
+                "y": coords[1],
             })
             id_counter += 1
 
