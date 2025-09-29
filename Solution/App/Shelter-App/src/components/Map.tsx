@@ -24,9 +24,10 @@ function Map({ data }: MapProps) {
 
     const potentialShelters = data.points.filter(p => p.type === "potential_shelter");
     const builtShelters = data.points.filter(p => p.type === "built_shelter");
-    const apartments = data.points.filter(p => p.type === "apartment");
+    const assigned_apartments = data.points.filter(p => p.type === "apartment" && p.assigned_to !== null);
+    const unassigned_apartments =  data.points.filter(p => p.type === "apartment" && p.assigned_to === null);
     
-    const lines = apartments
+    const lines = assigned_apartments
       .filter(a => a.assigned_to !== null)
       .map(a => {
         const shelter = data.points.find(p => p.id === a.assigned_to);
@@ -75,10 +76,18 @@ function Map({ data }: MapProps) {
       }),
 
       new ScatterplotLayer<AllocationPoint>({
-        id: "apartments",
-        data: apartments,
+        id: "unassigned_apartments",
+        data: unassigned_apartments,
         getPosition: d => [d.x, d.y],
-        getFillColor: [255, 255, 255], // biały
+        getFillColor: [0, 0, 0], 
+        getRadius: 10,
+      }),
+
+      new ScatterplotLayer<AllocationPoint>({
+        id: "assigned_apartments",
+        data: assigned_apartments,
+        getPosition: d => [d.x, d.y],
+        getFillColor: [230, 186, 11], // pomarańczowaty
         getRadius: 10,
       }),
 
