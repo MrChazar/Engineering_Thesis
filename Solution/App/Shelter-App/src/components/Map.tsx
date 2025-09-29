@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import DeckGL from "@deck.gl/react";
 import { ScatterplotLayer, LineLayer } from "@deck.gl/layers";
 import { TileLayer } from "@deck.gl/geo-layers";
@@ -18,26 +18,31 @@ interface MapProps {
 }
 
 function Map({ data }: MapProps) {
-  debugger
+  const [selected, setSelected] = useState<AllocationPoint | null>(null);
+
   const layers = useMemo(() => {
     if (!data) return [];
 
     const potentialShelters = data.points.filter(p => p.type === "potential_shelter");
     const builtShelters = data.points.filter(p => p.type === "built_shelter");
     const assigned_apartments = data.points.filter(p => p.type === "apartment" && p.assigned_to !== null);
-    const unassigned_apartments =  data.points.filter(p => p.type === "apartment" && p.assigned_to === null);
-    
+    const unassigned_apartments = data.points.filter(p => p.type === "apartment" && p.assigned_to === null);
+
     const lines = assigned_apartments
-      .filter(a => a.assigned_to !== null)
       .map(a => {
         const shelter = data.points.find(p => p.id === a.assigned_to);
-        if (!shelter) return null;
-        return {
-          source: [a.x, a.y],
-          target: [shelter.x, shelter.y]
-        };
+        return shelter ? { source: [a.x, a.y], target: [shelter.x, shelter.y] } : null;
       })
       .filter(l => l !== null);
+
+    const commonLayerProps = {
+      pickable: true,
+      onClick: (info: any) => {
+        if (info.object) {
+          setSelected(info.object as AllocationPoint);
+        }
+      }
+    };
 
     return [
       new TileLayer({
@@ -63,32 +68,36 @@ function Map({ data }: MapProps) {
         id: "potential-shelters",
         data: potentialShelters,
         getPosition: d => [d.x, d.y],
-        getFillColor: [255, 0, 0], // czerwony
+        getFillColor: [255, 0, 0],
         getRadius: 20,
+        ...commonLayerProps
       }),
 
       new ScatterplotLayer<AllocationPoint>({
         id: "built-shelters",
         data: builtShelters,
         getPosition: d => [d.x, d.y],
-        getFillColor: [0, 200, 0], // zielony
+        getFillColor: [0, 200, 0],
         getRadius: 20,
+        ...commonLayerProps
       }),
 
       new ScatterplotLayer<AllocationPoint>({
-        id: "unassigned_apartments",
+        id: "unassigned-apartments",
         data: unassigned_apartments,
         getPosition: d => [d.x, d.y],
-        getFillColor: [0, 0, 0], 
+        getFillColor: [0, 0, 0],
         getRadius: 10,
+        ...commonLayerProps
       }),
 
       new ScatterplotLayer<AllocationPoint>({
-        id: "assigned_apartments",
+        id: "assigned-apartments",
         data: assigned_apartments,
         getPosition: d => [d.x, d.y],
-        getFillColor: [230, 186, 11], // pomarańczowaty
+        getFillColor: [230, 186, 11],
         getRadius: 10,
+        ...commonLayerProps
       }),
 
       new LineLayer({
@@ -96,19 +105,44 @@ function Map({ data }: MapProps) {
         data: lines,
         getSourcePosition: d => d!.source,
         getTargetPosition: d => d!.target,
-        getColor: [0, 0, 0], // czarny
+        getColor: [0, 0, 0],
         getWidth: 1.5,
       })
     ];
   }, [data]);
 
   return (
-    <DeckGL
-      initialViewState={INITIAL_VIEW_STATE}
-      controller={true}
-      layers={layers}
-      style={{ width: "100%", height: "100%" }}
-    />
+    <div className="relative w-full h-full">
+      <DeckGL
+        initialViewState={INITIAL_VIEW_STATE}
+        controller={true}
+        layers={layers}
+        style={{ width: "100%", height: "100%" }}
+      />
+      
+      {selected && (
+        <div className="absolute bottom-4 left-4 bg-white shadow-lg p-4 rounded text-sm max-w-xs">
+          {selected.type === "apartment" ? (
+            <div className="text-black">
+              <p><b>Apartment</b></p>
+              <p>id: {selected.id}</p>
+              <p>x: {selected.x}, y: {selected.y}</p>
+              <p>assigned_to: {selected.assigned_to ?? "none"}</p>
+            </div>
+          ) : (
+            <div className="text-black">
+              <p><b>Shelter</b></p>
+              <p>id: {selected.id}</p>
+              <p>x: {selected.x}, y: {selected.y}</p>
+              <p>cost: {selected.cost ?? "unknown"}</p>
+              <p>apartments assigned: {
+                data?.points.filter(p => p.type === "apartment" && p.assigned_to === selected.id).length
+              }</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
