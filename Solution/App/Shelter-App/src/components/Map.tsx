@@ -17,8 +17,12 @@ interface MapProps {
   data: ShelterAllocationResponse | undefined;
 }
 
+
+
 function Map({ data }: MapProps) {
   const [selected, setSelected] = useState<AllocationPoint | null>(null);
+  const [coordinate, setCoordinate] = useState<number[] | null>(null);
+  const [addPanel, setAddPanel] = useState<boolean>(false);
 
   const layers = useMemo(() => {
     if (!data) return [];
@@ -118,22 +122,42 @@ function Map({ data }: MapProps) {
         controller={true}
         layers={layers}
         style={{ width: "100%", height: "100%" }}
+        onHover={(info, event) => { // setting coordinate
+          if (info.coordinate) {
+            setCoordinate([info.coordinate[0], info.coordinate[1]])
+          }
+        }}
+        onClick={(info) => { // when click other place it will disappear
+          if (info.object) {
+          } else {
+            setSelected(null);
+          }
+        }}
       />
       
+      {coordinate && (
+        <div className="absolute bottom-4 right-4 bg-white shadow-lg p-4 rounded text-sm max-w-xs">
+          <div className="text-black">
+            <p>X: {coordinate[0].toFixed(10)}</p>
+            <p>Y: {coordinate[1].toFixed(10)}</p>
+          </div>
+        </div>
+      )}
+
       {selected && (
         <div className="absolute bottom-4 left-4 bg-white shadow-lg p-4 rounded text-sm max-w-xs">
           {selected.type === "apartment" ? (
             <div className="text-black">
               <p><b>Apartment</b></p>
               <p>id: {selected.id}</p>
-              <p>x: {selected.x}, y: {selected.y}</p>
+              <p>x: {selected.x.toFixed(10)}, y: {selected.y.toFixed(10)}</p>
               <p>assigned_to: {selected.assigned_to ?? "none"}</p>
             </div>
           ) : (
             <div className="text-black">
               <p><b>Shelter</b></p>
               <p>id: {selected.id}</p>
-              <p>x: {selected.x}, y: {selected.y}</p>
+              <p>x: {selected.x.toFixed(10)}, y: {selected.y.toFixed(10)}</p>
               <p>cost: {selected.cost ?? "unknown"}</p>
               <p>apartments assigned: {
                 data?.points.filter(p => p.type === "apartment" && p.assigned_to === selected.id).length

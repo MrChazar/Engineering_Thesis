@@ -1,4 +1,7 @@
-import {type PointType, type AllocationPoint, type ShelterAllocationResponse, type ShelterAllocationRequest } from "./types/ShelterTypes"
+import {type PointType, type AllocationPoint,
+   type ShelterAllocationResponse, type ShelterAllocationRequest,
+  type AddShelterRequest, type AddShelterResponse,
+  type AddResidentalBuildingRequest,type AddResidentalBuildingResponse  } from "./types/ShelterTypes"
 
 export const apiService = {
   async getShelterAllocations(params: ShelterAllocationRequest): Promise<ShelterAllocationResponse> {
@@ -13,13 +16,14 @@ export const apiService = {
     return response.json();
   },
 
-  async getShelters(): Promise<any> {
-    const response = await fetch('http://localhost:8000/shelters');
+  async addShelter(params: AddShelterRequest): Promise<AddShelterResponse>{
     
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    return response.json();
+    const response = await fetch('http://localhost:8000/shelter/new_shelter/${params.x}/${params.y}/{capacity}/{cost}')
+  
+  },
+
+  async addResidentalBuilding(params: AddResidentalBuildingRequest): Promise<AddResidentalBuildingResponse>{
+
+    const response = await fetch('http://localhost:8000/shelter/residental_building/{x}/{y}/')
   }
 };

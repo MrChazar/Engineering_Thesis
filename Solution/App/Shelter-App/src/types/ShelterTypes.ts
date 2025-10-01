@@ -20,3 +20,23 @@ export interface ShelterAllocationRequest {
   model: string;
   allowedDistance: number;
 }
+
+export interface AddShelterRequest {
+  x: number,
+  y: number,
+  capacity: number,
+  cost: number
+}
+
+export interface AddResidentalBuildingRequest {
+  x: number,
+  y: number,
+}
+
+export interface AddShelterResponse {
+  status: string
+}
+
+export interface AddResidentalBuildingResponse {
+  status: string
+}
