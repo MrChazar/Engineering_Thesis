@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import DeckGL from "@deck.gl/react";
 import { ScatterplotLayer, LineLayer } from "@deck.gl/layers";
 import { TileLayer } from "@deck.gl/geo-layers";
 import { BitmapLayer } from "@deck.gl/layers";
 import { type ShelterAllocationResponse, type AllocationPoint } from "../types/ShelterTypes";
+import { apiService } from "../api";
 
 const INITIAL_VIEW_STATE = {
   longitude: 17.0385,
@@ -17,12 +18,35 @@ interface MapProps {
   data: ShelterAllocationResponse | undefined;
 }
 
-
-
 function Map({ data }: MapProps) {
   const [selected, setSelected] = useState<AllocationPoint | null>(null);
   const [coordinate, setCoordinate] = useState<number[] | null>(null);
   const [addPanel, setAddPanel] = useState<boolean>(false);
+
+  const [formType, setFormType] = useState<"shelter" | "apartment">("shelter");
+  const [capacity, setCapacity] = useState<number>(0);
+  const [cost, setCost] = useState<number>(0);
+  const [x, setX] = useState<number | null>(null);
+  const [y, setY] = useState<number | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key.toLowerCase() === "q") {
+        e.preventDefault();
+        setAddPanel(true);
+        setSelected(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+
+
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const layers = useMemo(() => {
     if (!data) return [];
@@ -115,6 +139,32 @@ function Map({ data }: MapProps) {
     ];
   }, [data]);
 
+  const handleAdd = async () => {
+    if (!coordinate) return;
+    if(!x || !y) return;
+
+    try {
+      if (formType === "shelter") {
+        await apiService.addShelter({
+          x: x,
+          y: y,
+          capacity,
+          cost,
+        });
+        setSuccessMessage("Dodano nowy Schron!");
+      } else {
+        await apiService.addResidentalBuilding({
+          x: x,
+          y: y,
+        });
+        setSuccessMessage("Dodano nowy obiekt mieszkalny!");
+      }
+      setAddPanel(false);
+    } catch (e) {
+      alert("Błąd podczas dodawania punktu");
+    }
+  };
+
   return (
     <div className="relative w-full h-full">
       <DeckGL
@@ -122,25 +172,126 @@ function Map({ data }: MapProps) {
         controller={true}
         layers={layers}
         style={{ width: "100%", height: "100%" }}
-        onHover={(info, event) => { // setting coordinate
-          if (info.coordinate) {
-            setCoordinate([info.coordinate[0], info.coordinate[1]])
+        onHover={(info) => {
+          if (info.coordinate && !addPanel) {
+            setCoordinate([info.coordinate[0], info.coordinate[1]]);
+            setX(info.coordinate[0]);
+            setY(info.coordinate[1]);
           }
         }}
-        onClick={(info) => { // when click other place it will disappear
-          if (info.object) {
-          } else {
+
+        onClick={(info) => {
+          if (!info.object) {
             setSelected(null);
           }
         }}
       />
-      
+
       {coordinate && (
         <div className="absolute bottom-4 right-4 bg-white shadow-lg p-4 rounded text-sm max-w-xs">
-          <div className="text-black">
-            <p>X: {coordinate[0].toFixed(10)}</p>
-            <p>Y: {coordinate[1].toFixed(10)}</p>
+          <button 
+            onClick={() => setAddPanel(true)} 
+            className="bg-black text-white px-3 py-1 rounded"
+          >
+            Dodaj
+          </button>
+          <div className="text-black mt-2">
+            <p>X: {coordinate[0].toFixed(6)}</p>
+            <p>Y: {coordinate[1].toFixed(6)}</p>
           </div>
+        </div>
+      )}
+
+      {addPanel && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white text-black p-6 rounded shadow-xl w-96">
+            <h2 className="text-lg font-bold mb-4">Dodaj punkt</h2>
+            
+            <label className="block mb-2">
+              Typ:
+              <select
+                value={formType}
+                onChange={(e) => setFormType(e.target.value as "shelter" | "apartment")}
+                className="border p-1 ml-2"
+              >
+                <option value="shelter">Shelter</option>
+                <option value="apartment">Apartment</option>
+              </select>
+            </label>
+
+            <label className="block mb-2">
+              X:
+              <input
+                type="number"
+                value={x ?? ""}
+                onChange={(e) => setX(Number(e.target.value))}
+                className="border ml-2 p-1 w-32"
+                step="0.000001"
+              />
+           </label>
+
+            <label className="block mb-2">
+              Y:
+              <input
+                type="number"
+                value={y ?? ""}
+                onChange={(e) => setY(Number(e.target.value))}
+                className="border ml-2 p-1 w-32"
+                step="0.000001"
+              />
+            </label>
+
+            {formType === "shelter" && (
+              <>
+                <label className="block mb-2">
+                  Capacity:
+                  <input
+                    type="number"
+                    value={capacity}
+                    onChange={(e) => setCapacity(Number(e.target.value))}
+                    className="border ml-2 p-1 w-24"
+                  />
+                </label>
+
+                <label className="block mb-2">
+                  Cost:
+                  <input
+                    type="number"
+                    value={cost}
+                    onChange={(e) => setCost(Number(e.target.value))}
+                    className="border ml-2 p-1 w-24"
+                  />
+                </label>
+              </>
+            )}
+
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setAddPanel(false)}
+                className="mr-2 px-3 py-1 border rounded"
+              >
+                Anuluj
+              </button>
+              <button
+                onClick={handleAdd}
+                className="px-3 py-1 bg-green-600 text-white rounded"
+              >
+                Dodaj
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="absolute top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow">
+          {successMessage}
+          <button 
+            className="ml-2 font-bold"
+            onClick={() => setSuccessMessage(null)}
+          >
+            ×
+          </button>
         </div>
       )}
 
@@ -150,14 +301,14 @@ function Map({ data }: MapProps) {
             <div className="text-black">
               <p><b>Apartment</b></p>
               <p>id: {selected.id}</p>
-              <p>x: {selected.x.toFixed(10)}, y: {selected.y.toFixed(10)}</p>
+              <p>x: {selected.x.toFixed(6)}, y: {selected.y.toFixed(6)}</p>
               <p>assigned_to: {selected.assigned_to ?? "none"}</p>
             </div>
           ) : (
             <div className="text-black">
               <p><b>Shelter</b></p>
               <p>id: {selected.id}</p>
-              <p>x: {selected.x.toFixed(10)}, y: {selected.y.toFixed(10)}</p>
+              <p>x: {selected.x.toFixed(6)}, y: {selected.y.toFixed(6)}</p>
               <p>cost: {selected.cost ?? "unknown"}</p>
               <p>apartments assigned: {
                 data?.points.filter(p => p.type === "apartment" && p.assigned_to === selected.id).length

@@ -16,14 +16,28 @@ export const apiService = {
     return response.json();
   },
 
-  async addShelter(params: AddShelterRequest): Promise<AddShelterResponse>{
-    
-    const response = await fetch('http://localhost:8000/shelter/new_shelter/${params.x}/${params.y}/{capacity}/{cost}')
-  
+  async addShelter(params: AddShelterRequest): Promise<AddShelterResponse> {
+
+    const response = await fetch(
+      `http://localhost:8000/shelter/new_shelter/${params.x}/${params.y}/${params.capacity}/${params.cost}`, { method: "POST"}
+    );
+
+    if (!response.ok) {
+      throw new Error("Błąd dodawania schronu");
+    }
+    return response.json();
   },
 
-  async addResidentalBuilding(params: AddResidentalBuildingRequest): Promise<AddResidentalBuildingResponse>{
+  async addResidentalBuilding(params: AddResidentalBuildingRequest): Promise<AddResidentalBuildingResponse> {
+    
+    const response = await fetch(
+      `http://localhost:8000/shelter/residental_building/${params.x}/${params.y}/`, { method: "POST"}
+    );
 
-    const response = await fetch('http://localhost:8000/shelter/residental_building/{x}/{y}/')
+    if (!response.ok) {
+      throw new Error("Błąd dodawania budynku mieszkalnego");
+    }
+
+    return response.json();
   }
 };

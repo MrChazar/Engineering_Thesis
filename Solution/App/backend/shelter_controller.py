@@ -19,7 +19,7 @@ def add_shelter(x: float, y: float, capacity: int, cost: float):
     result = dh.add_shelter(x,y,capacity,cost)
     return result
 
-@router.post("/residental_building/{x}/{y}/")
+@router.post("/residental_building/{x}/{y}")
 def add_residental_building(x: float, y: float):
     result = dh.add_residental_building(x,y)
     return result

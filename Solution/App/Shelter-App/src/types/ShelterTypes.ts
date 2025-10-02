@@ -22,21 +22,21 @@ export interface ShelterAllocationRequest {
 }
 
 export interface AddShelterRequest {
-  x: number,
-  y: number,
-  capacity: number,
-  cost: number
+  x: number;
+  y: number;
+  capacity: number;
+  cost: number;
 }
 
 export interface AddResidentalBuildingRequest {
-  x: number,
-  y: number,
+  x: number;
+  y: number;
 }
 
 export interface AddShelterResponse {
-  status: string
+  status: string;
 }
 
 export interface AddResidentalBuildingResponse {
-  status: string
+  status: string;
 }
