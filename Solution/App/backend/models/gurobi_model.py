@@ -27,14 +27,12 @@ def get_shelter_allocation(budget: float, allowedDistance: float):
         "C:\\Users\\jakub\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\residental_buildings.csv",
         sep=";")
 
-    residental_data = residental_data[0:150]
-
     existing_shelter_data = existing_shelter_data[
         (existing_shelter_data["County"] == "Wrocław") &
+        (existing_shelter_data["y"] >= 51.020) & (existing_shelter_data["y"] <= 51.210) &
+        (existing_shelter_data["x"] >= 16.850) & (existing_shelter_data["x"] <= 17.170) &
         ((existing_shelter_data["FacilityType"] == "[1] - (S) - schron") |
-         (existing_shelter_data["FacilityType"] == "[2] - (U) - ukrycie")) &
-        (existing_shelter_data["y"] >= 51.101153) & (existing_shelter_data["y"] <= 51.127456) &
-        (existing_shelter_data["x"] >= 17.068503) & (existing_shelter_data["x"] <= 17.123730)
+         (existing_shelter_data["FacilityType"] == "[2] - (U) - ukrycie"))
     ].dropna()
 
     # Nowe i istniejące schrony
