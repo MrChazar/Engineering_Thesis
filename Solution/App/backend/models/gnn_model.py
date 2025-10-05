@@ -118,50 +118,55 @@ def format_solution(bitlist, objective, budget, L_new, L_existing, M, c, y_offse
 
 
 def get_shelter_allocation(budget: float, allowedDistance: float):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    data = pd.read_csv("C:\\Users\\jakub\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\schrony-csv.csv")
 
-    data = data[
-        (data["County"] == "Wrocław") &
-        ((data["FacilityType"] == "[1] - (S) - schron") | (data["FacilityType"] == "[2] - (U) - ukrycie")) &
-        (data["y"] >= 51.101153) & (data["y"] <= 51.127456) &  # latitude
-        (data["x"] >= 17.068503) & (data["x"] <= 17.123730)  # longitude
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    existing_shelter_data = pd.read_csv(
+        "C:\\Users\\jakub\\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\existing_shelters.csv"
+    )
+
+    new_shelter_data = pd.read_csv(
+        "C:\\Users\\jakub\\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\new_shelters.csv",
+        sep=";"
+    )
+
+    residental_data = pd.read_csv(
+        "C:\\Users\\jakub\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\residental_buildings.csv",
+        sep=";")
+
+    existing_shelter_data = existing_shelter_data[
+        (existing_shelter_data["County"] == "Wrocław") &
+        (existing_shelter_data["y"] >= 51.020) & (existing_shelter_data["y"] <= 51.210) &
+        (existing_shelter_data["x"] >= 16.850) & (existing_shelter_data["x"] <= 17.170) &
+        ((existing_shelter_data["FacilityType"] == "[1] - (S) - schron") |
+         (existing_shelter_data["FacilityType"] == "[2] - (U) - ukrycie"))
         ].dropna()
 
-    s = 6
-    h = 50
-    p = 15
-    P = [100, 10, 10, 100]
-    e = len(data)
-
-    L_new = [
-        [51.103504, 17.086370],
-        [51.100217, 17.082551],
-        [51.100390, 17.099490],
-        [51.100590, 17.0590],
-        [51.100190, 17.079490],
-        [51.100590, 17.059490]
-    ]
-
-    L_existing = data[["y", "x"]].values.tolist()
-
+    # Nowe i istniejące schrony
+    L_existing = existing_shelter_data[["x", "y"]].values.tolist()
+    L_new = new_shelter_data[["x", "y"]].values.tolist()
     L = L_new + L_existing
 
+    s = len(L_new)
+    e = len(L_existing)
+    h = len(residental_data)
+    p = budget
+    K = 100
+    d = allowedDistance
+
+    M = residental_data[["x", "y"]].values.tolist()
+    P = [100, 10, 10, 100, 10]
+
+
     # Koszty i pojemności
-    c = [2, 2, 4, 6, 8, 1] + [0] * e
-    v = [10, 4, 1, 5, 6, 4] + list(data["Capacity"] / 10)
+    c = list(new_shelter_data["cost"]) + [0] * e
+    v = list((new_shelter_data["capacity"] / 10).astype(int)) + list(
+        (existing_shelter_data["Capacity"] / 10).astype(int))
+
 
     slack_sizes = [math.floor(math.log2(vi)) for vi in v]  # za pojemności schronów
     slack_sizes.append(math.floor(math.log2(p)))  # za budżet
 
-    # losowanie obiektów mieszkalnych
-    np.random.seed(42)
-    lat_range = (51.101153, 51.127456)
-    lon_range = (17.068503, 17.123730)
-    M = [
-        [np.random.uniform(*lat_range), np.random.uniform(*lon_range)]
-        for _ in range(h)
-    ]
 
     # Odległości r_{i,n} w kilometrach
     r = [[geodesic(l, m).kilometers for m in M] for l in L]
@@ -210,7 +215,6 @@ def get_shelter_allocation(budget: float, allowedDistance: float):
 
     # \sum_{n \in M} x_{i,n} \leq v_i \quad \forall i \in L
     slack_offset = (s + e) * h
-
     for i in range(s + e):
         N_i = math.floor(math.log2(v[i])) + 1
         slack_idxs = [slack_offset + sum(slack_sizes[:i]) + k for k in range(N_i)]
@@ -248,6 +252,7 @@ def get_shelter_allocation(budget: float, allowedDistance: float):
         for b, wb in terms:
             if a < b:
                 Q[a, b] += P[2] * wa * wb
+
     # x_{in} \leq y_i   \   \quad \forall i \in L \ \forall n \in M
     for i in range(s + e):
         for n in range(h):

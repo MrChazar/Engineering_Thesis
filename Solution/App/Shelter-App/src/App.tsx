@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "../src/App.css"
 import Map from "./components/map";
 import {type PointType, type AllocationPoint, type ShelterAllocationResponse, type ShelterAllocationRequest } from "./types/ShelterTypes"
@@ -14,8 +14,27 @@ function App() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState<string>("Ładowanie");
   const [error, setError] = useState<string | null>(null);
   const [allocations, setAllocations] = useState<ShelterAllocationResponse | any>();
+
+
+  // animacja ładowania
+  useEffect(() => {
+    
+    if(!loading){
+      return
+    }
+
+    const texts = ["Ładowanie", "Ładowanie.", "Ładowanie..", "Ładowanie..."];
+    let index = 0;
+
+    const interval = setInterval(() => {
+      index = (index + 1) % texts.length;
+      setLoadingText(texts[index]);
+    }, 2000);
+
+  })
 
   async function FormSubmit(e: React.FormEvent) 
   {
@@ -131,7 +150,7 @@ function App() {
           }
 
           {loading ? 
-          <h2 className="text-red-600">Ładowanie...</h2>
+            <h2 className="text-red-600">{loadingText}</h2>
           : <></>
           }
           

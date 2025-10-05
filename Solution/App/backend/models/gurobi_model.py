@@ -24,11 +24,12 @@ def get_shelter_allocation(budget: float, allowedDistance: float):
     )
 
     residental_data = pd.read_csv(
-        "C:\\Users\\jakub\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\residental_buildings.csv",
+        "C:\\Users\\jakub\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\residental_buildings_4.csv",
         sep=";")
 
     existing_shelter_data = existing_shelter_data[
         (existing_shelter_data["County"] == "Wrocław") &
+        (existing_shelter_data["Capacity"] <= 5000) &
         (existing_shelter_data["y"] >= 51.020) & (existing_shelter_data["y"] <= 51.210) &
         (existing_shelter_data["x"] >= 16.850) & (existing_shelter_data["x"] <= 17.170) &
         ((existing_shelter_data["FacilityType"] == "[1] - (S) - schron") |
