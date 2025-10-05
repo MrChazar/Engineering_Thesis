@@ -3,30 +3,51 @@ import numpy as np
 
 
 def add_shelter(x: float, y: float, capacity: int, cost: float):
-    new_shelter_data = pd.read_csv(
-        "C:\\Users\\jakub\\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\new_shelters.csv",
-        sep=";"
-    )
+    path = r"C:\Users\jakub\Documents\GitHub\Engineering_Thesis\Solution\App\backend\models\data\unified_data.csv"
+    data = pd.read_csv(path, sep=";")
 
-    if ((new_shelter_data["x"] == x) & (new_shelter_data["y"] == y)).any():
+    # Sprawdzenie, czy schron już istnieje
+    if ((data["x"] == x) & (data["y"] == y) & (data["type"] == "new_shelter")).any():
         return {"status": "exists"}
 
-    new_shelter_data.loc[len(new_shelter_data)] = [len(new_shelter_data)+1, x, y, capacity, cost]
-    new_shelter_data.to_csv(
-        path_or_buf="C:\\Users\\jakub\\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\new_shelters.csv",
-        sep=";", index=False)
+    # Nowy rekord
+    new_id = int(data["id"].max()) + 1 if not data.empty else 0
+    new_row = {
+        "id": new_id,
+        "x": float(x),
+        "y": float(y),
+        "type": "new_shelter",
+        "capacity": int(capacity),
+        "cost": float(cost)
+    }
+
+    # Dodanie i zapis
+    data.loc[len(data)] = new_row
+    data.to_csv(path, sep=";", index=False)
+
     return {"status": "ok"}
 
 
 def add_residental_building(x: float, y: float):
-    residental_data = pd.read_csv(
-        "C:\\Users\\jakub\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\residental_buildings.csv",
-        sep=";")
+    path = r"C:\Users\jakub\Documents\GitHub\Engineering_Thesis\Solution\App\backend\models\data\data.csv"
+    data = pd.read_csv(path, sep=";")
 
-    if ((residental_data["x"] == x) & (residental_data["y"] == y)).any():
+    # Sprawdzenie, czy punkt już istnieje
+    if ((data["x"] == x) & (data["y"] == y) & (data["type"] == "residental")).any():
         return {"status": "exists"}
 
-    residental_data.loc[len(residental_data)] = ["id", "residential", None, y, x]
-    residental_data.to_csv(path_or_buf="C:\\Users\\jakub\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\residental_buildings.csv",
-                           sep=";", index=False)
+    new_id = data["id"].max() + 1 if not data["id"].empty else 0
+    new_row = {
+        "id": new_id,
+        "x": x,
+        "y": y,
+        "type": "residental",
+        "capacity": 0,
+        "cost": 0
+    }
+
+    # Dodanie i zapis
+    data.loc[len(data)] = new_row
+    data.to_csv(path, sep=";", index=False)
+
     return {"status": "ok"}

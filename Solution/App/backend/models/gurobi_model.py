@@ -14,27 +14,12 @@ from gurobipy import Model, GRB, quicksum
 
 def get_shelter_allocation(budget: float, allowedDistance: float):
 
-    existing_shelter_data = pd.read_csv(
-        "C:\\Users\\jakub\\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\existing_shelters.csv"
-    )
-
-    new_shelter_data = pd.read_csv(
-        "C:\\Users\\jakub\\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\new_shelters.csv",
+    data = pd.read_csv("C:\\Users\\jakub\\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\data.csv",
         sep=";"
     )
-
-    residental_data = pd.read_csv(
-        "C:\\Users\\jakub\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\residental_buildings_4.csv",
-        sep=";")
-
-    existing_shelter_data = existing_shelter_data[
-        (existing_shelter_data["County"] == "Wrocław") &
-        (existing_shelter_data["Capacity"] <= 5000) &
-        (existing_shelter_data["y"] >= 51.020) & (existing_shelter_data["y"] <= 51.210) &
-        (existing_shelter_data["x"] >= 16.850) & (existing_shelter_data["x"] <= 17.170) &
-        ((existing_shelter_data["FacilityType"] == "[1] - (S) - schron") |
-         (existing_shelter_data["FacilityType"] == "[2] - (U) - ukrycie"))
-    ].dropna()
+    existing_shelter_data = data[(data["type"] == "existing_shelter")]
+    new_shelter_data = data[(data["type"] == "new_shelter")]
+    residental_data =  data[(data["type"] == "residental")]
 
     # Nowe i istniejące schrony
     L_existing = existing_shelter_data[["x", "y"]].values.tolist()
@@ -47,6 +32,7 @@ def get_shelter_allocation(budget: float, allowedDistance: float):
     p = budget
     K = 100
     d = allowedDistance
+    g = 10
 
     M = residental_data[["x", "y"]].values.tolist()
 
@@ -56,7 +42,7 @@ def get_shelter_allocation(budget: float, allowedDistance: float):
 
     # Koszty i pojemności
     c = list(new_shelter_data["cost"]) + [0] * e
-    v = list((new_shelter_data["capacity"] / 10).astype(int)) + list((existing_shelter_data["Capacity"] / 10).astype(int))
+    v = list((new_shelter_data["capacity"] / 10).astype(int)) + list((existing_shelter_data["capacity"] / g).astype(int))
 
     model = Model("shelter_location")
 
