@@ -6,7 +6,8 @@ export interface AllocationPoint {
   cost: number | null;
   assigned_to: number | null; 
   x: number; 
-  y: number; 
+  y: number;
+  capacity: number; 
 }
 
 export interface ShelterAllocationResponse {

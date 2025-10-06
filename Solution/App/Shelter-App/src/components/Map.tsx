@@ -29,6 +29,13 @@ function Map({ data }: MapProps) {
   const [x, setX] = useState<number | null>(null);
   const [y, setY] = useState<number | null>(null);
 
+  const [editPanel, setEditPanel] = useState<boolean>(false);
+  const [editX, setEditX] = useState<number | null>(null);
+  const [editY, setEditY] = useState<number | null>(null);
+  const [editCapacity, setEditCapacity] = useState<number>(0);
+  const [editCost, setEditCost] = useState<number>(0);
+
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key.toLowerCase() === "q") {
@@ -164,6 +171,53 @@ function Map({ data }: MapProps) {
       alert("Błąd podczas dodawania punktu");
     }
   };
+
+  const handleEdit = async () => {
+    if (!selected) return;
+
+    try {
+      if (selected.type === "apartment") {
+        await apiService.editResidentialBuilding({
+          id: selected.id,
+          x: editX ?? selected.x,
+          y: editY ?? selected.y,
+        });
+        setSuccessMessage("Zaktualizowano budynek mieszkalny!");
+      } else {
+        await apiService.editShelter({
+          id: selected.id,
+          x: editX ?? selected.x,
+          y: editY ?? selected.y,
+          capacity: editCapacity ?? selected.capacity,
+          cost: editCost ?? selected.cost ?? 0,
+        });
+        setSuccessMessage("Zaktualizowano schron!");
+      }
+      setEditPanel(false);
+      setSelected(null);
+    } catch (e) {
+      alert("Błąd podczas edycji punktu");
+    }
+  };
+
+const handleDelete = async () => {
+  if (!selected) return;
+  const confirmed = confirm("Czy na pewno chcesz usunąć ten punkt?");
+  if (!confirmed) return;
+
+  try {
+    if (selected.type === "apartment") {
+      await apiService.deleteResidentialBuilding(selected.id);
+      setSuccessMessage("Usunięto budynek mieszkalny!");
+    } else {
+      await apiService.deleteShelter(selected.id);
+      setSuccessMessage("Usunięto schron!");
+    }
+    setSelected(null);
+  } catch (e) {
+    alert("Błąd podczas usuwania punktu");
+  }
+};
 
   return (
     <div className="relative w-full h-full">
@@ -310,13 +364,103 @@ function Map({ data }: MapProps) {
               <p>id: {selected.id}</p>
               <p>x: {selected.x.toFixed(6)}, y: {selected.y.toFixed(6)}</p>
               <p>cost: {selected.cost ?? "unknown"}</p>
+              <p>capacity: {selected.capacity ?? "unknown"}</p>
               <p>apartments assigned: {
                 data?.points.filter(p => p.type === "apartment" && p.assigned_to === selected.id).length
               }</p>
             </div>
           )}
+          <div className="flex gap-2 mt-3">
+            <button
+              className="bg-blue-600 text-white px-3 py-1 rounded"
+              onClick={() => {
+                setEditX(selected.x);
+                setEditY(selected.y);
+                setEditCapacity(selected.capacity);
+                setEditCost(selected.cost ?? 0);
+                setEditPanel(true);
+              }}
+            >
+              Edytuj
+            </button>
+            <button
+              className="bg-red-600 text-white px-3 py-1 rounded"
+              onClick={handleDelete}
+            >
+              Usuń
+            </button>
+          </div>
         </div>
       )}
+
+      {editPanel && selected && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white text-black p-6 rounded shadow-xl w-96">
+            <h2 className="text-lg font-bold mb-4">Edytuj punkt</h2>
+
+            <label className="block mb-2">
+              X:
+              <input
+                type="number"
+                value={editX ?? selected.x}
+                onChange={(e) => setEditX(Number(e.target.value))}
+                className="border ml-2 p-1 w-32"
+                step="0.000001"
+              />
+            </label>
+
+            <label className="block mb-2">
+              Y:
+              <input
+                type="number"
+                value={editY ?? selected.y}
+                onChange={(e) => setEditY(Number(e.target.value))}
+                className="border ml-2 p-1 w-32"
+                step="0.000001"
+              />
+            </label>
+
+            {selected.type !== "apartment" && (
+              <>
+                <label className="block mb-2">
+                  Capacity:
+                  <input
+                    type="number"
+                    value={editCapacity ?? selected.capacity}
+                    onChange={(e) => setEditCapacity(Number(e.target.value))}
+                    className="border ml-2 p-1 w-24"
+                  />
+                </label>
+
+                <label className="block mb-2">
+                  Cost:
+                  <input
+                    type="number"
+                    value={editCost ?? selected.cost ?? 0}
+                    onChange={(e) => setEditCost(Number(e.target.value))}
+                    className="border ml-2 p-1 w-24"
+                  />
+                </label>
+              </>
+            )}
+
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setEditPanel(false)}
+                className="mr-2 px-3 py-1 border rounded"
+              >
+                Anuluj
+              </button>
+              <button
+                onClick={handleEdit}
+                className="px-3 py-1 bg-blue-600 text-white rounded"
+              >
+                Zapisz
+              </button>
+            </div>
+          </div>
+        </div>
+    )}
     </div>
   );
 }
