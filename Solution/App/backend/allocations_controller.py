@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 from Solution.App.backend.models import gnn_model as gnn, gurobi_model as gurobi, data_handler as dh
 
-router = APIRouter(prefix="/shelter", tags=["shelters"])
+router = APIRouter(prefix="/allocations", tags=["allocations"])
 
-@router.get("/allocations/{budget}/{allowedDistance}/{model}")
+@router.get("/{budget}/{allowedDistance}/{model}")
 def get_shelter_allocations(budget: float, allowedDistance: float, model: str):
     print(f"Parametry: {budget} {allowedDistance} {model}")
     result = None
@@ -12,17 +12,3 @@ def get_shelter_allocations(budget: float, allowedDistance: float, model: str):
     elif model == "GUROBI":
         result = gurobi.get_shelter_allocation(budget, allowedDistance)
     return result
-
-
-@router.post("/new_shelter/{x}/{y}/{capacity}/{cost}")
-def add_shelter(x: float, y: float, capacity: int, cost: float):
-    result = dh.add_shelter(x,y,capacity,cost)
-    return result
-
-@router.post("/residental_building/{x}/{y}")
-def add_residental_building(x: float, y: float):
-    result = dh.add_residental_building(x,y)
-    return result
-
-
-

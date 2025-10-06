@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-import shelter_controller as sc
+import shelters_controller as sc
+import residential_buildings_controller as rbc
+import allocations_controller as ac
 
 app = FastAPI(
     title="Shelter Allocation API",
@@ -18,10 +20,12 @@ app.add_middleware(
 )
 
 app.include_router(sc.router)
+app.include_router(rbc.router)
+app.include_router(ac.router)
 
 @app.get("/")
 def read_root():
-    return {"message": "Api działa"}
+    return {"message": "Api działa!!"}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)

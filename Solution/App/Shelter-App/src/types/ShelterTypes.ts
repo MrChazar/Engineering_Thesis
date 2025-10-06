@@ -28,7 +28,7 @@ export interface AddShelterRequest {
   cost: number;
 }
 
-export interface AddResidentalBuildingRequest {
+export interface AddResidentialBuildingRequest {
   x: number;
   y: number;
 }
@@ -37,6 +37,20 @@ export interface AddShelterResponse {
   status: string;
 }
 
-export interface AddResidentalBuildingResponse {
+export interface AddResidentialBuildingResponse {
   status: string;
+}
+
+export interface EditResidentialBuildingRequest {
+  id: number;
+  x: number;
+  y: number;
+}
+
+export interface EditShelterRequest {
+  id: number;
+  x: number;
+  y: number;
+  capacity: number;
+  cost: number;
 }
