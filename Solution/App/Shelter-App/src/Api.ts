@@ -13,7 +13,7 @@ import {
 
 export const apiService = {
   async getShelterAllocations(params: ShelterAllocationRequest): Promise<ShelterAllocationResponse> {
-    const response = await fetch(`http://localhost:8000/allocations/${params.budget}/${params.allowedDistance}/${params.model}`);
+    const response = await fetch(`http://localhost:8000/allocations/${params.budget}/${params.allowedDistance}/${params.averagePersonPerBuilding}/${params.model}`);
     window.console.log(response);
     
     if (!response.ok) {

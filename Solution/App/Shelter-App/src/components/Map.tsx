@@ -6,6 +6,7 @@ import { BitmapLayer } from "@deck.gl/layers";
 import { type ShelterAllocationResponse, type AllocationPoint } from "../types/ShelterTypes";
 import { apiService } from "../api";
 
+// set on Wrocław
 const INITIAL_VIEW_STATE = {
   longitude: 17.0385,
   latitude: 51.1079,
@@ -19,6 +20,8 @@ interface MapProps {
 }
 
 function Map({ data }: MapProps) {
+
+  // for data storage
   const [selected, setSelected] = useState<AllocationPoint | null>(null);
   const [coordinate, setCoordinate] = useState<number[] | null>(null);
   const [addPanel, setAddPanel] = useState<boolean>(false);
@@ -35,7 +38,10 @@ function Map({ data }: MapProps) {
   const [editCapacity, setEditCapacity] = useState<number>(0);
   const [editCost, setEditCost] = useState<number>(0);
 
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+
+  // for adding points by clicking q
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key.toLowerCase() === "q") {
@@ -50,10 +56,6 @@ function Map({ data }: MapProps) {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
-
-
-
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const layers = useMemo(() => {
     if (!data) return [];
@@ -146,6 +148,7 @@ function Map({ data }: MapProps) {
     ];
   }, [data]);
 
+  // for adding new shelters, residential buildings
   const handleAdd = async () => {
     if (!coordinate) return;
     if(!x || !y) return;

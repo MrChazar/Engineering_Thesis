@@ -12,7 +12,7 @@ from geopy.distance import geodesic
 from gurobipy import Model, GRB, quicksum
 
 
-def get_shelter_allocation(budget: float, allowedDistance: float):
+def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonPerBuilding: int):
 
     data = pd.read_csv("C:\\Users\\jakub\\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\data.csv",
         sep=";"
@@ -23,6 +23,7 @@ def get_shelter_allocation(budget: float, allowedDistance: float):
 
     # Nowe i istniejące schrony
     ids_existing = existing_shelter_data["id"].tolist()
+    ids_new = new_shelter_data["id"].tolist()
     ids_res = residental_data["id"].tolist()
     L_existing = existing_shelter_data[["x", "y"]].values.tolist()
     L_new = new_shelter_data[["x", "y"]].values.tolist()
@@ -33,8 +34,6 @@ def get_shelter_allocation(budget: float, allowedDistance: float):
     h = len(residental_data)
     p = budget
     K = 100
-    d = allowedDistance
-    g = 10
 
     M = residental_data[["x", "y"]].values.tolist()
 
@@ -43,7 +42,7 @@ def get_shelter_allocation(budget: float, allowedDistance: float):
 
     # Koszty i pojemności
     c = list(new_shelter_data["cost"]) + [0] * e
-    v = list((new_shelter_data["capacity"] / g).astype(int)) + list((existing_shelter_data["capacity"] / g).astype(int))
+    v = list((new_shelter_data["capacity"] / averagePersonPerBuilding).astype(int)) + list((existing_shelter_data["capacity"] / averagePersonPerBuilding).astype(int))
 
     model = Model("shelter_location")
 
@@ -79,7 +78,7 @@ def get_shelter_allocation(budget: float, allowedDistance: float):
     # ograniczenie – maksymalna odległość
     for i in range(s + e):
         for n in range(h):
-            if r[i, n] > d:
+            if r[i, n] > allowedDistance:
                 model.addConstr(x[(i, n)] == 0, name=f"dist_{i}_{n}")
 
     # budżet
@@ -110,7 +109,7 @@ def get_shelter_allocation(budget: float, allowedDistance: float):
                 "assigned_to": None,
                 "x": coords[0],
                 "y": coords[1],
-                "capacity": int(v[i])*g
+                "capacity": int(v[i])*averagePersonPerBuilding
             })
 
         # mieszkania

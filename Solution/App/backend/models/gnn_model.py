@@ -12,6 +12,7 @@ from torch_geometric.nn import GCNConv
 from torch_geometric.data import Data
 from torch.optim import Adam
 
+
 class QUBOGCN(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, dropout=0.001):
         super().__init__()
@@ -117,7 +118,7 @@ def format_solution(bitlist, objective, budget, L_new, L_existing, M, c, y_offse
     }
 
 
-def get_shelter_allocation(budget: float, allowedDistance: float):
+def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonPerBuilding: int):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

@@ -20,6 +20,7 @@ export interface ShelterAllocationRequest {
   budget: number;
   model: string;
   allowedDistance: number;
+  averagePersonPerBuilding: number;
 }
 
 export interface AddShelterRequest {

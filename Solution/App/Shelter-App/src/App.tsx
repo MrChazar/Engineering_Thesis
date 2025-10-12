@@ -7,10 +7,12 @@ import { apiService } from "./Api";
 
 function App() {
   
+  // states for handling data
   const [form, setForm] = useState({
     model: "",
     budget: "",
-    allowedDistance: ""
+    allowedDistance: "",
+    averagePersonPerBuilding: ""
   });
 
   const [loading, setLoading] = useState(false);
@@ -19,7 +21,7 @@ function App() {
   const [allocations, setAllocations] = useState<ShelterAllocationResponse | any>();
 
 
-  // animacja ładowania
+  // for loading animation
   useEffect(() => {
     
     if(!loading){
@@ -61,7 +63,8 @@ function App() {
       const request: ShelterAllocationRequest = {
         budget: parseFloat(form.budget),
         model: form.model,
-        allowedDistance: parseFloat(form.allowedDistance)
+        allowedDistance: parseFloat(form.allowedDistance),
+        averagePersonPerBuilding: parseInt(form.averagePersonPerBuilding)
       };
 
       const response = await apiService.getShelterAllocations(request);
@@ -114,6 +117,14 @@ function App() {
               className="rounded-full px-4 py-2 text-center text-gray-600 bg-white"
               value={form.allowedDistance}
               onChange={(e) => setForm({ ...form, allowedDistance: e.target.value })}
+            />
+
+            <input
+              type="number"
+              placeholder="Średnia liczba osób na bud. (os)"
+              className="rounded-full px-4 py-2 text-center text-gray-600 bg-white"
+              value={form.averagePersonPerBuilding}
+              onChange={(e) => setForm({ ...form, averagePersonPerBuilding: e.target.value })}
             />
 
             <select  className="rounded-full px-4 py-2 text-center text-gray-600 bg-white" onChange={(e) => setForm({ ...form, model: e.target.value })}>
