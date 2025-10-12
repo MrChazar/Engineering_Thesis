@@ -20,6 +20,11 @@ interface MapProps {
 }
 
 function Map({ data }: MapProps) {
+  const [localData, setLocalData] = useState<ShelterAllocationResponse | undefined>(data);
+
+  useEffect(() => {
+    setLocalData(data);
+  }, [data]);
 
   // for data storage
   const [selected, setSelected] = useState<AllocationPoint | null>(null);
@@ -58,16 +63,16 @@ function Map({ data }: MapProps) {
   }, []);
 
   const layers = useMemo(() => {
-    if (!data) return [];
+    if (!localData) return [];
 
-    const potentialShelters = data.points.filter(p => p.type === "potential_shelter");
-    const builtShelters = data.points.filter(p => p.type === "built_shelter");
-    const assigned_apartments = data.points.filter(p => p.type === "apartment" && p.assigned_to !== null);
-    const unassigned_apartments = data.points.filter(p => p.type === "apartment" && p.assigned_to === null);
+    const potentialShelters = localData.points.filter(p => p.type === "potential_shelter");
+    const builtShelters = localData.points.filter(p => p.type === "built_shelter");
+    const assigned_apartments = localData.points.filter(p => p.type === "apartment" && p.assigned_to !== null);
+    const unassigned_apartments = localData.points.filter(p => p.type === "apartment" && p.assigned_to === null);
 
     const lines = assigned_apartments
       .map(a => {
-        const shelter = data.points.find(p => p.id === a.assigned_to);
+        const shelter = localData.points.find(p => p.id === a.assigned_to);
         return shelter ? { source: [a.x, a.y], target: [shelter.x, shelter.y] } : null;
       })
       .filter(l => l !== null);
@@ -146,28 +151,45 @@ function Map({ data }: MapProps) {
         getWidth: 1.5,
       })
     ];
-  }, [data]);
+  }, [localData]);
+
+  const generateLocalId = () => Math.max(0, ...(localData?.points.map((p) => p.id) || [0])) + 1;
 
   // for adding new shelters, residential buildings
   const handleAdd = async () => {
-    if (!coordinate) return;
-    if(!x || !y) return;
+    if (x === null || y === null) return;
 
     try {
       if (formType === "shelter") {
-        await apiService.addShelter({
-          x: x,
-          y: y,
-          capacity,
+        await apiService.addShelter({ x, y, capacity, cost });
+        const newPoint: AllocationPoint = {
+          id: generateLocalId(),
+          type: "potential_shelter",
+          x,
+          y,
           cost,
-        });
-        setSuccessMessage("Dodano nowy Schron!");
+          capacity,
+          assigned_to: null,
+        };
+        setLocalData((prev) =>
+          prev ? { ...prev, points: [...prev.points, newPoint] } : prev
+        );
+        setSuccessMessage("Dodano nowy schron!");
       } else {
-        await apiService.addResidentalBuilding({
-          x: x,
-          y: y,
-        });
-        setSuccessMessage("Dodano nowy obiekt mieszkalny!");
+        await apiService.addResidentialBuilding({ x, y });
+        const newPoint: AllocationPoint = {
+          id: generateLocalId(),
+          type: "apartment",
+          x,
+          y,
+          cost: null,
+          capacity: 0,
+          assigned_to: null,
+        };
+        setLocalData((prev) =>
+          prev ? { ...prev, points: [...prev.points, newPoint] } : prev
+        );
+        setSuccessMessage("Dodano nowy budynek mieszkalny!");
       }
       setAddPanel(false);
     } catch (e) {
@@ -175,9 +197,9 @@ function Map({ data }: MapProps) {
     }
   };
 
+  // for editing shelter and residential building informations
   const handleEdit = async () => {
     if (!selected) return;
-
     try {
       if (selected.type === "apartment") {
         await apiService.editResidentialBuilding({
@@ -185,6 +207,18 @@ function Map({ data }: MapProps) {
           x: editX ?? selected.x,
           y: editY ?? selected.y,
         });
+        setLocalData((prev) =>
+          prev
+            ? {
+                ...prev,
+                points: prev.points.map((p) =>
+                  p.id === selected.id
+                    ? { ...p, x: editX ?? p.x, y: editY ?? p.y }
+                    : p
+                ),
+              }
+            : prev
+        );
         setSuccessMessage("Zaktualizowano budynek mieszkalny!");
       } else {
         await apiService.editShelter({
@@ -194,6 +228,24 @@ function Map({ data }: MapProps) {
           capacity: editCapacity ?? selected.capacity,
           cost: editCost ?? selected.cost ?? 0,
         });
+        setLocalData((prev) =>
+          prev
+            ? {
+                ...prev,
+                points: prev.points.map((p) =>
+                  p.id === selected.id
+                    ? {
+                        ...p,
+                        x: editX ?? p.x,
+                        y: editY ?? p.y,
+                        capacity: editCapacity ?? p.capacity,
+                        cost: editCost ?? p.cost,
+                      }
+                    : p
+                ),
+              }
+            : prev
+        );
         setSuccessMessage("Zaktualizowano schron!");
       }
       setEditPanel(false);
@@ -203,24 +255,31 @@ function Map({ data }: MapProps) {
     }
   };
 
-const handleDelete = async () => {
-  if (!selected) return;
-  const confirmed = confirm("Czy na pewno chcesz usunąć ten punkt?");
-  if (!confirmed) return;
 
-  try {
-    if (selected.type === "apartment") {
-      await apiService.deleteResidentialBuilding(selected.id);
-      setSuccessMessage("Usunięto budynek mieszkalny!");
-    } else {
-      await apiService.deleteShelter(selected.id);
-      setSuccessMessage("Usunięto schron!");
+  // for deleting
+  const handleDelete = async () => {
+    if (!selected) return;
+    const confirmed = confirm("Czy na pewno chcesz usunąć ten punkt?");
+    if (!confirmed) return;
+
+    try {
+      if (selected.type === "apartment") {
+        await apiService.deleteResidentialBuilding(selected.id);
+        setSuccessMessage("Usunięto budynek mieszkalny!");
+      } else {
+        await apiService.deleteShelter(selected.id);
+        setSuccessMessage("Usunięto schron!");
+      }
+      setLocalData((prev) =>
+        prev
+          ? { ...prev, points: prev.points.filter((p) => p.id !== selected.id) }
+          : prev
+      );
+      setSelected(null);
+    } catch (e) {
+      alert("Błąd podczas usuwania punktu");
     }
-    setSelected(null);
-  } catch (e) {
-    alert("Błąd podczas usuwania punktu");
-  }
-};
+  };
 
   return (
     <div className="relative w-full h-full">
@@ -248,7 +307,7 @@ const handleDelete = async () => {
         <div className="absolute bottom-4 right-4 bg-white shadow-lg p-4 rounded text-sm max-w-xs">
           <button 
             onClick={() => setAddPanel(true)} 
-            className="bg-black text-white px-3 py-1 rounded"
+            className="bg-primary text-white px-3 py-1 rounded"
           >
             Dodaj
           </button>
@@ -331,7 +390,7 @@ const handleDelete = async () => {
               </button>
               <button
                 onClick={handleAdd}
-                className="px-3 py-1 bg-green-600 text-white rounded"
+                className="px-3 py-1 bg-primary text-white rounded"
               >
                 Dodaj
               </button>
@@ -341,7 +400,7 @@ const handleDelete = async () => {
       )}
 
       {successMessage && (
-        <div className="absolute top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow">
+        <div className="absolute top-4 right-4 bg-primary text-white px-4 py-2 rounded shadow">
           {successMessage}
           <button 
             className="ml-2 font-bold"
@@ -375,7 +434,7 @@ const handleDelete = async () => {
           )}
           <div className="flex gap-2 mt-3">
             <button
-              className="bg-blue-600 text-white px-3 py-1 rounded"
+              className="bg-primary text-white px-3 py-1 rounded"
               onClick={() => {
                 setEditX(selected.x);
                 setEditY(selected.y);
@@ -456,7 +515,7 @@ const handleDelete = async () => {
               </button>
               <button
                 onClick={handleEdit}
-                className="px-3 py-1 bg-blue-600 text-white rounded"
+                className="px-3 py-1 bg-primary text-white rounded"
               >
                 Zapisz
               </button>

@@ -35,7 +35,7 @@ export const apiService = {
     return response.json();
   },
 
-  async addResidentalBuilding(params: AddResidentialBuildingRequest): Promise<AddResidentialBuildingResponse> {
+  async addResidentialBuilding(params: AddResidentialBuildingRequest): Promise<AddResidentialBuildingResponse> {
     
     const response = await fetch(
       `http://localhost:8000/residential_buildings/${params.x}/${params.y}`, { method: "POST"}
