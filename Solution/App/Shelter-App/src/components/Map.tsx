@@ -111,7 +111,7 @@ function Map({ data }: MapProps) {
         data: potentialShelters,
         getPosition: d => [d.x, d.y],
         getFillColor: [255, 0, 0],
-        getRadius: 20,
+        getRadius: 15,
         ...commonLayerProps
       }),
 
@@ -120,7 +120,7 @@ function Map({ data }: MapProps) {
         data: builtShelters,
         getPosition: d => [d.x, d.y],
         getFillColor: [0, 200, 0],
-        getRadius: 20,
+        getRadius: 15,
         ...commonLayerProps
       }),
 
@@ -129,7 +129,7 @@ function Map({ data }: MapProps) {
         data: unassigned_apartments,
         getPosition: d => [d.x, d.y],
         getFillColor: [0, 0, 0],
-        getRadius: 10,
+        getRadius: 5,
         ...commonLayerProps
       }),
 
@@ -138,7 +138,7 @@ function Map({ data }: MapProps) {
         data: assigned_apartments,
         getPosition: d => [d.x, d.y],
         getFillColor: [230, 186, 11],
-        getRadius: 10,
+        getRadius: 5,
         ...commonLayerProps
       }),
 
@@ -148,7 +148,7 @@ function Map({ data }: MapProps) {
         getSourcePosition: d => d!.source,
         getTargetPosition: d => d!.target,
         getColor: [0, 0, 0],
-        getWidth: 1.5,
+        getWidth: 1,
       })
     ];
   }, [localData]);
