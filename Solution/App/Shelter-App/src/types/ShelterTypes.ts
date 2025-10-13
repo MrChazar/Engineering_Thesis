@@ -56,3 +56,24 @@ export interface EditShelterRequest {
   capacity: number;
   cost: number;
 }
+
+export interface LoginRequest {
+  login: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  success: boolean;
+}
+
+export interface RegisterRequest {
+  name: string;
+  surname: string;
+  email: string;
+  password: string;
+}
+
+export interface RegisterResponse {
+  success: boolean;
+}
+

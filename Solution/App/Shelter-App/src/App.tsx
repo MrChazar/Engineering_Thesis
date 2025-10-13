@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import "../src/App.css"
-import Map from "./components/map";
+import Map from "./components/Map";
 import {type PointType, type AllocationPoint, type ShelterAllocationResponse, type ShelterAllocationRequest } from "./types/ShelterTypes"
 import { apiService } from "./Api";
+import Header from "./components/Header";
+import NotFound from "./components/NotFound";
 
 
 function App() {
@@ -86,18 +88,9 @@ function App() {
   }
 
   return (
+    <NotFound>
     <div className="min-h-screen bg-white flex flex-col">
-      <header className="bg-black text-primary font-bold px-6 py-4 flex">
-        <div className="flex items-center gap-3">
-          <img
-            src="/icons/app_logo.png"
-            alt="Shelter App Logo"
-            className="w-7 h-7"
-          />
-          <h1 className="text-xl font-bold tracking-wide">Shelter App</h1>
-        </div>
-      </header>
-
+      <Header />
       <main className="flex flex-1 gap-4 p-6">
         <section className="flex-1 bg-primary rounded-2xl p-6 flex flex-col">
           <h1 className="text-center font-bold text-black mb-6">Parametry Procesu</h1>
@@ -167,10 +160,11 @@ function App() {
           
         </section>
       </main>
-      <footer className="bg-black text-primary text-center font-bold min-h">
-        <h1>Wykonał: Jakub Wieśniak</h1>
+      <footer className="bg-black text-primary text-center font-bold py-2 mt-auto shadow-inner border-t border-gray-700">
+        <p>Wykonał: Jakub Wieśniak</p>
       </footer>
     </div>
+    </NotFound>
   );
 }
 

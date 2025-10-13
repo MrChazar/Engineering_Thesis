@@ -1,5 +1,9 @@
 import pandas as pd
 import numpy as np
+import sqlite3
+import hashlib
+import os
+
 
 
 def add_shelter(x: float, y: float, capacity: int, cost: float):
@@ -105,3 +109,69 @@ def delete_residential_building(id: int):
     data.to_csv(path, sep=";", index=False)
 
     return {"status": "ok"}
+
+
+DB_PATH = "users.db"
+
+def get_connection():
+    """Tworzy połączenie z bazą SQLite (i tworzy tabelę, jeśli jej nie ma)."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        surname TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        salt TEXT NOT NULL
+    )
+    """)
+    conn.commit()
+    return conn
+
+
+def hash_password(password: str, salt: str) -> str:
+    return hashlib.sha256((password + salt).encode("utf-8")).hexdigest()
+
+
+def register(name: str, surname: str, email: str, password: str) -> bool:
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT id FROM users WHERE email = ?", (email,))
+    if cur.fetchone():
+        conn.close()
+        return False
+
+    salt = os.urandom(16).hex()
+    password_hash = hash_password(password, salt)
+
+    cur.execute("""
+        INSERT INTO users (name, surname, email, password_hash, salt)
+        VALUES (?, ?, ?, ?, ?)
+    """, (name, surname, email, password_hash, salt))
+
+    conn.commit()
+    conn.close()
+    return True
+
+
+def login(login: str, password: str) -> bool:
+    conn = get_connection()
+    cur = conn.cursor()
+
+    # W SQLite wybieramy rekord, gdzie login (część przed @) pasuje do podanego loginu
+    cur.execute("""
+        SELECT password_hash, salt 
+        FROM users 
+        WHERE substr(email, 1, instr(email, '@') - 1) = ?
+    """, (login,))
+    row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        return False  # użytkownik nie istnieje
+
+    stored_hash, salt = row
+    input_hash = hash_password(password, salt)
+    return stored_hash == input_hash

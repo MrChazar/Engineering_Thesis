@@ -8,7 +8,11 @@ import {
   type AddResidentialBuildingRequest,
   type AddResidentialBuildingResponse,
   type EditResidentialBuildingRequest,
-  type EditShelterRequest
+  type EditShelterRequest,
+  type LoginRequest,
+  type LoginResponse,
+  type RegisterRequest,
+  type RegisterResponse
 } from "./types/ShelterTypes";
 
 export const apiService = {
@@ -82,6 +86,34 @@ export const apiService = {
     );
     if (!response.ok) throw new Error("Błąd usuwania budynku mieszkalnego");
     return response.json();
-  }
+  },
+
+  async login(params: LoginRequest): Promise<LoginResponse> {
+    const response = await fetch("http://localhost:8000/users/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+    });
+
+    if (!response.ok) {
+      throw new Error("Błąd logowania");
+    }
+
+    return response.json();
+  },
+
+  async register(params: RegisterRequest): Promise<RegisterResponse> {
+    const response = await fetch("http://localhost:8000/users/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+    });
+
+    if (!response.ok) {
+      throw new Error("Błąd rejestracji");
+    }
+
+    return response.json();
+  },
 
 };

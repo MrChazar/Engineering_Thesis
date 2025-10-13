@@ -4,6 +4,7 @@ import uvicorn
 import shelters_controller as sc
 import residential_buildings_controller as rbc
 import allocations_controller as ac
+import users_controller as uc
 
 app = FastAPI(
     title="Shelter Allocation API",
@@ -22,6 +23,8 @@ app.add_middleware(
 app.include_router(sc.router)
 app.include_router(rbc.router)
 app.include_router(ac.router)
+app.include_router(uc.router)
+
 
 @app.get("/")
 def read_root():
