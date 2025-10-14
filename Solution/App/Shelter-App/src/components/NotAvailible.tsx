@@ -1,10 +1,11 @@
 import React from "react";
 
-interface ProtectedNotFoundProps {
+interface ProtectedNotAvailibleProps {
   children: React.ReactNode;
 }
 
-const NotFound: React.FC<ProtectedNotFoundProps> = ({ children }) => {
+const NotAvailible: React.FC<ProtectedNotAvailibleProps> = ({ children }) => {
+  debugger
   const isLogged = sessionStorage.getItem("isLogged") === "true";
 
   if (!isLogged) {
@@ -18,4 +19,4 @@ const NotFound: React.FC<ProtectedNotFoundProps> = ({ children }) => {
   return <>{children}</>;
 };
 
-export default NotFound;
+export default NotAvailible;

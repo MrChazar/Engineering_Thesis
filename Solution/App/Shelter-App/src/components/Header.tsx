@@ -31,11 +31,23 @@ function Header() {
 
   return (
     <header className="bg-black text-primary justify-between font-bold px-6 py-4 flex items-center relative">
-      <div className="flex items-center gap-3">
-        <img src="/icons/app_logo.png" alt="Shelter App Logo" className="w-7 h-7" />
-        <h1 className="text-xl font-bold tracking-wide">Shelter App</h1>
-      </div>
+      <div className="flex flex-row items-center gap-6">
+        <a href="/" className="flex items-center gap-3">
+          <img
+            src="/icons/app_logo.png"
+            alt="Shelter App Logo"
+            className="w-7 h-7"
+          />
+          <h1 className="text-xl font-bold tracking-wide">Shelter App</h1>
+        </a>
 
+        {isLogged && (
+          <a href="/App" className="flex items-center gap-3">
+            <h1 className="text-xl font-bold tracking-wide">Model</h1>
+          </a>
+        )}
+      </div>
+     
       <div className="relative" ref={menuRef}>
         <img
           src="/icons/user.png"
@@ -48,8 +60,8 @@ function Header() {
           <div className="absolute right-0 mt-2 w-40 bg-white text-black rounded-lg shadow-lg flex flex-col z-10">
             {!isLogged ? (
               <>
-                <a href="/Login" className="px-4 py-2 hover:bg-gray-200">Zaloguj się</a>
-                <a href="/Register" className="px-4 py-2 hover:bg-gray-200">Zarejestruj się</a>
+                <a href="/Login" className="px-4  rounded-lg  py-2 hover:bg-gray-200">Zaloguj się</a>
+                <a href="/Register" className="px-4  rounded-lg  py-2 hover:bg-gray-200">Zarejestruj się</a>
               </>
             ) : (
               <button

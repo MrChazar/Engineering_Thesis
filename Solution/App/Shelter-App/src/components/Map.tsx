@@ -4,7 +4,7 @@ import { ScatterplotLayer, LineLayer } from "@deck.gl/layers";
 import { TileLayer } from "@deck.gl/geo-layers";
 import { BitmapLayer } from "@deck.gl/layers";
 import { type ShelterAllocationResponse, type AllocationPoint } from "../types/ShelterTypes";
-import { apiService } from "../api";
+import { apiService } from "../Api";
 
 // set on Wrocław
 const INITIAL_VIEW_STATE = {
@@ -320,7 +320,7 @@ function Map({ data }: MapProps) {
 
       {addPanel && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white text-black p-6 rounded shadow-xl w-96">
+          <div className="bg-white m-2 text-black p-6 rounded shadow-xl w-96">
             <h2 className="text-lg font-bold mb-4">Dodaj punkt</h2>
             
             <label className="block mb-2">
