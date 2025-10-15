@@ -1,133 +1,107 @@
-import pandas as pd
-import numpy as np
 import sqlite3
 import hashlib
 import os
 
+DB_PATH = r"C:\Users\jakub\Documents\GitHub\Engineering_Thesis\Solution\App\backend\models\data\database.db"
 
+
+def get_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def add_shelter(x: float, y: float, capacity: int, cost: float):
-    path = r"C:\Users\jakub\Documents\GitHub\Engineering_Thesis\Solution\App\backend\models\data\data.csv"
-    data = pd.read_csv(path, sep=";")
+    conn = get_connection()
+    cur = conn.cursor()
 
-    # Sprawdzenie, czy schron już istnieje
-    if ((data["x"] == x) & (data["y"] == y) & (data["type"] == "new_shelter")).any():
+    cur.execute("SELECT id FROM shelters WHERE x=? AND y=? AND type='new_shelter'", (x, y))
+    if cur.fetchone():
+        conn.close()
         return {"status": "exists"}
 
-    # Nowy rekord
-    new_id = int(data["id"].max()) + 1 if not data.empty else 0
-    new_row = {
-        "id": new_id,
-        "x": float(x),
-        "y": float(y),
-        "type": "new_shelter",
-        "capacity": int(capacity),
-        "cost": float(cost)
-    }
-
-    # Dodanie i zapis
-    data.loc[len(data)] = new_row
-    data.to_csv(path, sep=";", index=False)
-
+    cur.execute("""
+        INSERT INTO shelters (x, y, capacity, cost, type)
+        VALUES (?, ?, ?, ?, 'new_shelter')
+    """, (x, y, capacity, cost))
+    conn.commit()
+    conn.close()
     return {"status": "ok"}
+
 
 def edit_shelter(id: int, x: float, y: float, capacity: float, cost: float):
-    path = r"C:\Users\jakub\Documents\GitHub\Engineering_Thesis\Solution\App\backend\models\data\data.csv"
-    data = pd.read_csv(path, sep=";")
+    conn = get_connection()
+    cur = conn.cursor()
 
-    mask = (data["id"] == id) & (data["type"] == "new_shelter")
-    if not mask.any():
+    cur.execute("SELECT id FROM shelters WHERE id=? AND type='new_shelter'", (id,))
+    if not cur.fetchone():
+        conn.close()
         return {"status": "not_found"}
 
-    data.loc[mask, ["x", "y", "capacity", "cost"]] = [float(x), float(y), float(capacity), float(cost)]
-    data.to_csv(path, sep=";", index=False)
-
+    cur.execute("""
+        UPDATE shelters 
+        SET x=?, y=?, capacity=?, cost=?
+        WHERE id=? AND type='new_shelter'
+    """, (x, y, capacity, cost, id))
+    conn.commit()
+    conn.close()
     return {"status": "ok"}
 
-def delete_shelter(id: int):
-    path = r"C:\Users\jakub\Documents\GitHub\Engineering_Thesis\Solution\App\backend\models\data\data.csv"
-    data = pd.read_csv(path, sep=";")
 
-    mask = (data["id"] == id) & (data["type"] == "new_shelter")
-    if not mask.any():
+def delete_shelter(id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("DELETE FROM shelters WHERE id=? AND type='new_shelter'", (id,))
+    if cur.rowcount == 0:
+        conn.close()
         return {"status": "not_found"}
 
-    data = data.loc[~mask]
-    data.to_csv(path, sep=";", index=False)
-
+    conn.commit()
+    conn.close()
     return {"status": "ok"}
 
 
 def add_residential_building(x: float, y: float):
-    path = r"C:\Users\jakub\Documents\GitHub\Engineering_Thesis\Solution\App\backend\models\data\data.csv"
-    data = pd.read_csv(path, sep=";")
+    conn = get_connection()
+    cur = conn.cursor()
 
-    # Sprawdzenie, czy punkt już istnieje
-    if ((data["x"] == x) & (data["y"] == y) & (data["type"] == "residental")).any():
+    cur.execute("SELECT id FROM residential_buildings WHERE x=? AND y=?", (x, y))
+    if cur.fetchone():
+        conn.close()
         return {"status": "exists"}
 
-    new_id = data["id"].max() + 1 if not data["id"].empty else 0
-    new_row = {
-        "id": new_id,
-        "x": x,
-        "y": y,
-        "type": "residental",
-        "capacity": 0,
-        "cost": 0
-    }
-
-    # Dodanie i zapis
-    data.loc[len(data)] = new_row
-    data.to_csv(path, sep=";", index=False)
-
+    cur.execute("INSERT INTO residential_buildings (x, y) VALUES (?, ?)", (x, y))
+    conn.commit()
+    conn.close()
     return {"status": "ok"}
 
 
 def edit_residential_building(id: int, x: float, y: float):
-    path = r"C:\Users\jakub\Documents\GitHub\Engineering_Thesis\Solution\App\backend\models\data\data.csv"
-    data = pd.read_csv(path, sep=";")
+    conn = get_connection()
+    cur = conn.cursor()
 
-    mask = (data["id"] == id) & (data["type"] == "residental")
-    if not mask.any():
+    cur.execute("UPDATE residential_buildings SET x=?, y=? WHERE id=?", (x, y, id))
+    if cur.rowcount == 0:
+        conn.close()
         return {"status": "not_found"}
 
-    data.loc[mask, ["x", "y"]] = [float(x), float(y)]
-    data.to_csv(path, sep=";", index=False)
-
+    conn.commit()
+    conn.close()
     return {"status": "ok"}
 
 
 def delete_residential_building(id: int):
-    path = r"C:\Users\jakub\Documents\GitHub\Engineering_Thesis\Solution\App\backend\models\data\data.csv"
-    data = pd.read_csv(path, sep=";")
+    conn = get_connection()
+    cur = conn.cursor()
 
-    mask = (data["id"] == id) & (data["type"] == "residental")
-    if not mask.any():
+    cur.execute("DELETE FROM residential_buildings WHERE id=?", (id,))
+    if cur.rowcount == 0:
+        conn.close()
         return {"status": "not_found"}
 
-    data = data.loc[~mask]
-    data.to_csv(path, sep=";", index=False)
-
-    return {"status": "ok"}
-
-
-DB_PATH = "users.db"
-
-def get_connection():
-    """Tworzy połączenie z bazą SQLite (i tworzy tabelę, jeśli jej nie ma)."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        surname TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        salt TEXT NOT NULL
-    )
-    """)
     conn.commit()
-    return conn
+    conn.close()
+    return {"status": "ok"}
 
 
 def hash_password(password: str, salt: str) -> str:
@@ -160,7 +134,6 @@ def login(login: str, password: str) -> bool:
     conn = get_connection()
     cur = conn.cursor()
 
-    # W SQLite wybieramy rekord, gdzie login (część przed @) pasuje do podanego loginu
     cur.execute("""
         SELECT password_hash, salt 
         FROM users 
@@ -170,8 +143,7 @@ def login(login: str, password: str) -> bool:
     conn.close()
 
     if not row:
-        return False  # użytkownik nie istnieje
+        return False
 
     stored_hash, salt = row
-    input_hash = hash_password(password, salt)
-    return stored_hash == input_hash
+    return stored_hash == hash_password(password, salt)

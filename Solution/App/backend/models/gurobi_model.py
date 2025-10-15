@@ -3,46 +3,54 @@ import numpy as np
 import pandas as pd
 from geopy.distance import geodesic
 from gurobipy import Model, GRB, quicksum
-
-
+import sqlite3
 import math
 import numpy as np
 import pandas as pd
 from geopy.distance import geodesic
 from gurobipy import Model, GRB, quicksum
 
+DB_PATH = r"C:\Users\jakub\Documents\GitHub\Engineering_Thesis\Solution\App\backend\models\data\database.db"
 
 def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonPerBuilding: int):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
 
-    data = pd.read_csv("C:\\Users\\jakub\\Documents\\GitHub\\Engineering_Thesis\\Solution\\App\\backend\\models\\data\\data.csv",
-        sep=";"
-    )
-    existing_shelter_data = data[(data["type"] == "existing_shelter")]
-    new_shelter_data = data[(data["type"] == "new_shelter")]
-    residental_data =  data[(data["type"] == "residental")]
+    cur.execute("SELECT * FROM shelters WHERE type='existing_shelter'")
+    existing_shelters = cur.fetchall()
 
-    # Nowe i istniejące schrony
-    ids_existing = existing_shelter_data["id"].tolist()
-    ids_new = new_shelter_data["id"].tolist()
-    ids_res = residental_data["id"].tolist()
-    L_existing = existing_shelter_data[["x", "y"]].values.tolist()
-    L_new = new_shelter_data[["x", "y"]].values.tolist()
+    cur.execute("SELECT * FROM shelters WHERE type='new_shelter'")
+    new_shelters = cur.fetchall()
+
+    cur.execute("SELECT * FROM residential_buildings")
+    residential_buildings = cur.fetchall()
+
+    conn.close()
+
+    ids_existing = [row["id"] for row in existing_shelters]
+    ids_new = [row["id"] for row in new_shelters]
+    ids_res = [row["id"] for row in residential_buildings]
+
+    L_existing = [[row["x"], row["y"]] for row in existing_shelters]
+    L_new = [[row["x"], row["y"]] for row in new_shelters]
     L = L_new + L_existing
 
     s = len(L_new)
     e = len(L_existing)
-    h = len(residental_data)
+    h = len(residential_buildings)
     p = budget
     K = 100
 
-    M = residental_data[["x", "y"]].values.tolist()
+    M = [[row["x"], row["y"]] for row in residential_buildings]
 
     r = [[geodesic(l, m).kilometers for m in M] for l in L]
     r = np.array(r)
 
     # Koszty i pojemności
-    c = list(new_shelter_data["cost"]) + [0] * e
-    v = list((new_shelter_data["capacity"] / averagePersonPerBuilding).astype(int)) + list((existing_shelter_data["capacity"] / averagePersonPerBuilding).astype(int))
+    c = [row["cost"] for row in new_shelters] + [0] * e
+    v = [int(row["capacity"] / averagePersonPerBuilding) for row in new_shelters] + \
+        [int(row["capacity"] / averagePersonPerBuilding) for row in existing_shelters]
 
     model = Model("shelter_location")
 

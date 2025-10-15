@@ -1,3 +1,6 @@
 *.pyc
 *.pyc
 /Solution/.idea
+*.lic
+*.pyc
+*.pdf
