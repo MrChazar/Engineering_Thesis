@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { apiService } from "../../src/Api";
 import "../../src/App.css";
 import Header from "../components/Header";
@@ -10,6 +10,10 @@ function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() =>{
+    document.title = "Shelter App - Register";
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

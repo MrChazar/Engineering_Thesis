@@ -22,10 +22,19 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [allocations, setAllocations] = useState<ShelterAllocationResponse | any>();
 
+  useEffect(() => {
+    if(!loading)
+    {
+      document.title = "Shelter App - Model"
+    }
+    else
+    {
+      document.title = "Shelter App - Model Ładowanie..."
+    }
+  })
 
   // for loading animation
   useEffect(() => {
-    
     if(!loading){
       return
     }
@@ -37,31 +46,36 @@ function App() {
       index = (index + 1) % texts.length;
       setLoadingText(texts[index]);
     }, 2000);
-
   })
 
-  async function FormSubmit(e: React.FormEvent) 
-  {
+  async function FormSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     if (loading) {
-      setError("Model nie skończył przetwarzać poprzedniego zapytania");
+      const errorMsg = "Model nie skończył przetwarzać poprzedniego zapytania";
+      setError(errorMsg);
+      console.error("Błędy:", [errorMsg]);
       return;
     }
 
     setLoading(true);
     setAllocations("");
     setError(null);
+    
+    const errors: string[] = [];
+    let success = false;
 
     try {
-      if (!form.budget || form.model == "") {
-        throw new Error("Proszę wypełnić wszystkie pola");
+      if (!form.budget || form.model == "") errors.push("Proszę wypełnić wszystkie pola");
+      if (form.averagePersonPerBuilding && Number(form.averagePersonPerBuilding) <= 0) errors.push("Średnia liczba osób nie może być mniejsza/równa zero");
+      if (form.allowedDistance && Number(form.allowedDistance) <= 0) errors.push("Maksymalna odległość nie może być mniejsza/równa zero");
+      if (form.budget && Number(form.budget) < 0) errors.push("Budżet nie może być mniejszy od zera");
+
+      if (errors.length > 0) {
+        throw new Error(errors.join(" | "));
       }
 
-      if(loading) {
-        throw new Error("Model nie skończył przetwarzać poprzedniego zapytania")
-      }
-
+      // Request
       const request: ShelterAllocationRequest = {
         budget: parseFloat(form.budget),
         model: form.model,
@@ -70,19 +84,22 @@ function App() {
       };
 
       const response = await apiService.getShelterAllocations(request);
-      debugger
       setAllocations({
         points: response.points,
         objective: response.objective,
-        used_budget: response.used_budget
+        used_budget: response.used_budget,
+        time: response.time
       });
       
-      console.log("Otrzymane alokacje:", allocations);
+      success = true;
       
     } catch (err) {
+      console.error("BŁĘDY:", errors.length > 0 ? errors : ["Błąd API"]);
       setError(err instanceof Error ? err.message : "Wystąpił nieznany błąd");
-      console.error("Błąd podczas pobierania danych:", err);
     } finally {
+      if (errors.length > 0) {
+        console.log(errors);
+      }
       setLoading(false);
     }
   }
@@ -104,6 +121,9 @@ function App() {
                   className="rounded-full px-4 py-2 text-center text-gray-700 bg-white"
                   value={form.budget}
                   onChange={(e) => setForm({ ...form, budget: e.target.value })}
+                  min={0}
+                  max={1000}
+                  step={0.1}
                 />
 
                 <input
@@ -112,6 +132,9 @@ function App() {
                   className="rounded-full px-4 py-2 text-center text-gray-700 bg-white"
                   value={form.allowedDistance}
                   onChange={(e) => setForm({ ...form, allowedDistance: e.target.value })}
+                  min={0.1}
+                  max={1000}
+                  step={0.1}
                 />
 
                 <input
@@ -120,6 +143,9 @@ function App() {
                   className="rounded-full px-4 py-2 text-center text-gray-700 bg-white"
                   value={form.averagePersonPerBuilding}
                   onChange={(e) => setForm({ ...form, averagePersonPerBuilding: e.target.value })}
+                  min={1}
+                  max={1000}
+                  step={1}
                 />
 
                 <select
@@ -163,7 +189,10 @@ function App() {
                   <span className="font-bold text-black">Wartość funkcji celu:</span> {allocations.objective.toFixed(2)}
                 </p>
                 <p className="text-gray-700 text-base">
-                  <span className="font-bold text-black">Użyty budżet:</span> {allocations.used_budget.toLocaleString()} milionów zł
+                  <span className="font-bold text-black">Użyty budżet:</span> {(allocations.used_budget*1000000).toLocaleString()} zł
+                </p>
+                <p className="text-gray-700 text-base">
+                  <span className="font-bold text-black">Proces zajął:</span> {(allocations.time).toLocaleString()} minut
                 </p>
               </div>
             )}

@@ -9,10 +9,12 @@ import numpy as np
 import pandas as pd
 from geopy.distance import geodesic
 from gurobipy import Model, GRB, quicksum
+import time
 
 DB_PATH = r"C:\Users\jakub\Documents\GitHub\Engineering_Thesis\Solution\App\backend\models\data\database.db"
 
 def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonPerBuilding: int):
+    start = time.time()
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
@@ -144,6 +146,7 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
             "points": points,
             "objective": float(model.objVal),
             "used_budget": used_budget,
+            "time": int((time.time() - start) / 60)
         }
     else:
         return {"status": "no_optimal_solution"}

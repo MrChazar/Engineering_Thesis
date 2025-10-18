@@ -13,7 +13,8 @@ export interface AllocationPoint {
 export interface ShelterAllocationResponse {
   points: AllocationPoint[];
   objective: number;   
-  used_budget: number;      
+  used_budget: number;
+  time: number;      
 }
 
 export interface ShelterAllocationRequest {

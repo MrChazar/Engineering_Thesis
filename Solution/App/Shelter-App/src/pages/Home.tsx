@@ -1,9 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import "../../src/App.css";
 import Header from "../components/Header";
+import { useEffect } from "react";
 
 function Home() {
   const navigate = useNavigate();
+
+  useEffect(() =>{
+    document.title = "Shelter App - Home";
+  })
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -32,13 +37,15 @@ function Home() {
             <li>➕ Możliwość dodawania i edytowania punktów danych</li>
             <li>📊 Podgląd wyników i użytego budżetu</li>
           </ul>
-
+          { sessionStorage.getItem("isLogged") === "false" ?  
           <button
             onClick={() => navigate("/register")}
             className="mt-8 m-2 bg-black text-white px-6 py-3 rounded-xl text-lg font-semibold hover:bg-gray-800 transition"
           >
             Zarejestruj się i zacznij już teraz →
-          </button>
+          </button> : <></>
+        }
+         
         </section>
 
         <section className="flex-1 flex justify-center items-center">
