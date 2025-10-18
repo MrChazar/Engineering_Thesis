@@ -61,9 +61,14 @@ function Header() {
         </a>
 
         {isLogged && (
-          <a href="/App" className="flex items-center gap-3">
-            <h1 className="text-xl font-bold tracking-wide">Model</h1>
-          </a>
+          <>
+            <a href="/App" className="flex items-center gap-3">
+              <h1 className="text-xl font-bold tracking-wide">Model</h1>
+            </a>
+            <a href="/Instruction" className="flex items-center gap-3">
+              <h1 className="text-xl font-bold tracking-wide">Instrukcja</h1>
+            </a>
+          </>
         )}
       </div>
      
