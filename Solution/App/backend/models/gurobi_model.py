@@ -54,6 +54,7 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
     v = [int(row["capacity"] / averagePersonPerBuilding) for row in new_shelters] + \
         [int(row["capacity"] / averagePersonPerBuilding) for row in existing_shelters]
 
+    capacity = [row["capacity"] for row in new_shelters] + [row["capacity"] for row in existing_shelters]
     model = Model("shelter_location")
 
     x, y, z = {}, {}, {}
@@ -119,7 +120,7 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
                 "assigned_to": None,
                 "x": coords[0],
                 "y": coords[1],
-                "capacity": int(v[i])*averagePersonPerBuilding
+                "capacity": capacity[i]
             })
 
         # mieszkania
