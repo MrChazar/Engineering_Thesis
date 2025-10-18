@@ -25,19 +25,23 @@ function Login() {
     try {
       setLoading(true);
       const response = await apiService.login({ login, password });
-      if (response.success) {
+
+      if (response && response.access_token) {
+        sessionStorage.setItem("token", response.access_token);
         alert("Zalogowano pomyślnie.");
-        sessionStorage.setItem("isLogged", "true");
         window.location.href = "/app";
       } else {
         setError("Nieprawidłowy login lub hasło.");
       }
-    } catch (err) {
-      setError("Błąd logowania. Spróbuj ponownie.");
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.detail || "Błąd logowania. Spróbuj ponownie.";
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-white flex flex-col">

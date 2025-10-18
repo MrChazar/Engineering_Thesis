@@ -1,14 +1,41 @@
 import { useNavigate } from "react-router-dom";
 import "../../src/App.css";
 import Header from "../components/Header";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { apiService } from "../Api";
 
 function Home() {
   const navigate = useNavigate();
+  const [isLogged, setIsLogged] = useState<boolean>(false);
+
 
   useEffect(() =>{
     document.title = "Shelter App - Home";
   })
+
+  useEffect(() => {
+    const verifyUser = async () => {
+      const token = sessionStorage.getItem("token");
+
+      if (token) {
+        try {
+          const response = await apiService.verify(token);
+          if (response.valid) {
+            setIsLogged(true);
+          } else {
+            setIsLogged(false);
+          }
+        } catch (err) {
+          console.error("Błąd weryfikacji:", err);
+          setIsLogged(false);
+        }
+      } else {
+        setIsLogged(false);
+      }
+    };
+
+    verifyUser();
+  }, []);
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -37,7 +64,7 @@ function Home() {
             <li>➕ Możliwość dodawania i edytowania punktów danych</li>
             <li>📊 Podgląd wyników i użytego budżetu</li>
           </ul>
-          { sessionStorage.getItem("isLogged") === "false" ?  
+          { !isLogged ?  
           <button
             onClick={() => navigate("/register")}
             className="mt-8 m-2 bg-black text-white px-6 py-3 rounded-xl text-lg font-semibold hover:bg-gray-800 transition"

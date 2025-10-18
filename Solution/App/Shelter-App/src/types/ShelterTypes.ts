@@ -64,7 +64,8 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  success: boolean;
+  access_token: string;
+  token_type: string;
 }
 
 export interface RegisterRequest {
@@ -78,3 +79,6 @@ export interface RegisterResponse {
   success: boolean;
 }
 
+export interface verifyResponse {
+  valid: boolean;
+}

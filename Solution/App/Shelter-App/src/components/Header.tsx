@@ -8,8 +8,27 @@ function Header() {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const logged = sessionStorage.getItem("isLogged") === "true";
-    setIsLogged(logged);
+    const verifyUser = async () => {
+      const token = sessionStorage.getItem("token");
+
+      if (token) {
+        try {
+          const response = await apiService.verify(token);
+          if (response.valid) {
+            setIsLogged(true);
+          } else {
+            setIsLogged(false);
+          }
+        } catch (err) {
+          console.error("Błąd weryfikacji:", err);
+          setIsLogged(false);
+        }
+      } else {
+        setIsLogged(false);
+      }
+    };
+
+    verifyUser();
   }, []);
 
   useEffect(() => {
@@ -23,7 +42,7 @@ function Header() {
   }, []);
 
   const handleLogout = () => {
-    sessionStorage.setItem("isLogged", "false");
+    sessionStorage.removeItem("token");
     setIsLogged(false);
     setMenuOpen(false);
     window.location.href = "/";

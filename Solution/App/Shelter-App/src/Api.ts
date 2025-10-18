@@ -12,7 +12,8 @@ import {
   type LoginRequest,
   type LoginResponse,
   type RegisterRequest,
-  type RegisterResponse
+  type RegisterResponse,
+  type verifyResponse
 } from "./types/ShelterTypes";
 
 export const apiService = {
@@ -115,5 +116,19 @@ export const apiService = {
 
     return response.json();
   },
+
+  async verify(token: string): Promise<verifyResponse> {
+    const response = await fetch("http://localhost:8000/users/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }), // <-- KLUCZOWE
+    });
+
+    if (!response.ok) {
+      throw new Error("Błąd weryfikacji");
+    }
+
+    return response.json();
+  }
 
 };

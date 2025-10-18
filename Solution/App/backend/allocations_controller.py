@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from Solution.App.backend.models import gnn_model as gnn, gurobi_model as gurobi, data_handler as dh
+from Solution.App.backend.models import gnn_model as gnn, gurobi_model as gurobi, shelter_service as ss
 
 router = APIRouter(prefix="/allocations", tags=["allocations"])
 

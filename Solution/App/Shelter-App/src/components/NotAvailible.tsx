@@ -1,12 +1,38 @@
 import React from "react";
+import { useEffect, useState } from "react";
+import { apiService } from "../Api";
 
 interface ProtectedNotAvailibleProps {
   children: React.ReactNode;
 }
 
 const NotAvailible: React.FC<ProtectedNotAvailibleProps> = ({ children }) => {
-  debugger
-  const isLogged = sessionStorage.getItem("isLogged") === "true";
+
+  const [isLogged, setIsLogged] = useState<boolean>(false);
+  useEffect(() => {
+      const verifyUser = async () => {
+        debugger
+        const token = sessionStorage.getItem("token");
+  
+        if (token) {
+          try {
+            const response = await apiService.verify(token);
+            if (response.valid) {
+              setIsLogged(true);
+            } else {
+              setIsLogged(false);
+            }
+          } catch (err) {
+            console.error("Błąd weryfikacji:", err);
+            setIsLogged(false);
+          }
+        } else {
+          setIsLogged(false);
+        }
+      };
+  
+      verifyUser();
+    }, []);
 
   if (!isLogged) {
     return (
