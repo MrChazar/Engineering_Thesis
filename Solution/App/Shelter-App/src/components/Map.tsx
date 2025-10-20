@@ -320,77 +320,69 @@ function Map({ data }: MapProps) {
 
       {addPanel && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white m-2 text-black p-6 rounded shadow-xl w-96">
-            <h2 className="text-lg font-bold mb-4">Dodaj punkt</h2>
-            
-            <label className="block mb-2">
-              Typ:
+          <div className="bg-white m-4 text-black p-6 rounded-2xl shadow-2xl w-[420px] max-h-[50vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-6 text-center">Dodaj punkt</h2>
+
+            <div className="grid grid-cols-3 gap-4 items-center">
+              <label className="font-semibold text-right col-span-1">Typ:</label>
               <select
                 value={formType}
                 onChange={(e) => setFormType(e.target.value as "shelter" | "apartment")}
-                className="border p-1 ml-2"
+                className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
               >
                 <option value="shelter">Shelter</option>
                 <option value="apartment">Apartment</option>
               </select>
-            </label>
 
-            <label className="block mb-2">
-              X:
+              <label className="font-semibold text-right col-span-1">X:</label>
               <input
                 type="number"
                 value={x ?? ""}
                 onChange={(e) => setX(Number(e.target.value))}
-                className="border ml-2 p-1 w-32"
                 step="0.000001"
+                className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
               />
-           </label>
 
-            <label className="block mb-2">
-              Y:
+              <label className="font-semibold text-right col-span-1">Y:</label>
               <input
                 type="number"
                 value={y ?? ""}
                 onChange={(e) => setY(Number(e.target.value))}
-                className="border ml-2 p-1 w-32"
                 step="0.000001"
+                className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
               />
-            </label>
 
-            {formType === "shelter" && (
-              <>
-                <label className="block mb-2">
-                  Capacity:
+              {formType === "shelter" && (
+                <>
+                  <label className="font-semibold text-right col-span-1">Capacity:</label>
                   <input
                     type="number"
                     value={capacity}
                     onChange={(e) => setCapacity(Number(e.target.value))}
-                    className="border ml-2 p-1 w-24"
+                    className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
                   />
-                </label>
 
-                <label className="block mb-2">
-                  Cost:
+                  <label className="font-semibold text-right col-span-1">Cost:</label>
                   <input
                     type="number"
                     value={cost}
                     onChange={(e) => setCost(Number(e.target.value))}
-                    className="border ml-2 p-1 w-24"
+                    className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
                   />
-                </label>
-              </>
-            )}
+                </>
+              )}
+            </div>
 
-            <div className="flex justify-end mt-4">
+            <div className="flex justify-end mt-6 gap-2">
               <button
                 onClick={() => setAddPanel(false)}
-                className="mr-2 px-3 py-1 border rounded"
+                className="px-4 py-2 border rounded-md hover:bg-gray-100 transition"
               >
                 Anuluj
               </button>
               <button
                 onClick={handleAdd}
-                className="px-3 py-1 bg-primary text-white rounded"
+                className="px-4 py-2 bg-primary text-white rounded-md hover:opacity-90 transition"
               >
                 Dodaj
               </button>
@@ -457,72 +449,66 @@ function Map({ data }: MapProps) {
 
       {editPanel && selected && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white text-black p-6 rounded shadow-xl w-96">
-            <h2 className="text-lg font-bold mb-4">Edytuj punkt</h2>
+          <div className="bg-white m-4 text-black p-6 rounded-2xl shadow-2xl w-[420px] max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-6 text-center">Edytuj punkt</h2>
 
-            <label className="block mb-2">
-              X:
+            <div className="grid grid-cols-3 gap-4 items-center">
+              <label className="font-semibold text-right col-span-1">X:</label>
               <input
                 type="number"
                 value={editX ?? selected.x}
                 onChange={(e) => setEditX(Number(e.target.value))}
-                className="border ml-2 p-1 w-32"
                 step="0.000001"
+                className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
               />
-            </label>
 
-            <label className="block mb-2">
-              Y:
+              <label className="font-semibold text-right col-span-1">Y:</label>
               <input
                 type="number"
                 value={editY ?? selected.y}
                 onChange={(e) => setEditY(Number(e.target.value))}
-                className="border ml-2 p-1 w-32"
                 step="0.000001"
+                className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
               />
-            </label>
 
-            {selected.type !== "apartment" && (
-              <>
-                <label className="block mb-2">
-                  Capacity:
+              {selected.type !== "apartment" && (
+                <>
+                  <label className="font-semibold text-right col-span-1">Capacity:</label>
                   <input
                     type="number"
                     value={editCapacity ?? selected.capacity}
                     onChange={(e) => setEditCapacity(Number(e.target.value))}
-                    className="border ml-2 p-1 w-24"
+                    className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
                   />
-                </label>
 
-                <label className="block mb-2">
-                  Cost:
+                  <label className="font-semibold text-right col-span-1">Cost:</label>
                   <input
                     type="number"
                     value={editCost ?? selected.cost ?? 0}
                     onChange={(e) => setEditCost(Number(e.target.value))}
-                    className="border ml-2 p-1 w-24"
+                    className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
                   />
-                </label>
-              </>
-            )}
+                </>
+              )}
+            </div>
 
-            <div className="flex justify-end mt-4">
+            <div className="flex justify-end mt-6 gap-2">
               <button
                 onClick={() => setEditPanel(false)}
-                className="mr-2 px-3 py-1 border rounded"
+                className="px-4 py-2 border rounded-md hover:bg-gray-100 transition"
               >
                 Anuluj
               </button>
               <button
                 onClick={handleEdit}
-                className="px-3 py-1 bg-primary text-white rounded"
+                className="px-4 py-2 bg-primary text-white rounded-md hover:opacity-90 transition"
               >
                 Zapisz
               </button>
             </div>
           </div>
         </div>
-    )}
+      )}
     </div>
   );
 }

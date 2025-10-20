@@ -106,10 +106,10 @@ function App() {
 
   return (
     <NotAvailible>
-      <div className="h-screen flex flex-col bg-white overflow-hidden">
+      <div className="h-screen flex flex-col bg-secondary overflow-hidden">
         <Header />
         <main className="flex flex-1 p-4 gap-4 overflow-hidden">
-          <section className="w-1/3 bg-primary rounded-2xl p-6 flex flex-col justify-between shadow-md">
+          <section className="w-1/3 bg-primary  rounded-2xl p-6 flex flex-col justify-between shadow-md">
             <div>
               <h1 className="text-center text-2xl font-extrabold text-black mb-6 tracking-wide">
               Parametry Procesu

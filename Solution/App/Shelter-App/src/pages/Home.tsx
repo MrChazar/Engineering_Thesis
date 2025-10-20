@@ -38,7 +38,7 @@ function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-secondary flex flex-col">
       <Header />
 
       <main className="flex flex-1 flex-col lg:flex-row items-center  justify-between gap-8 p-10">

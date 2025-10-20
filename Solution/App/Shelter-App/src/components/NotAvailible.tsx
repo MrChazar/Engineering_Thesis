@@ -8,7 +8,7 @@ interface ProtectedNotAvailibleProps {
 
 const NotAvailible: React.FC<ProtectedNotAvailibleProps> = ({ children }) => {
 
-  const [isLogged, setIsLogged] = useState<boolean>(false);
+  const [isLogged, setIsLogged] = useState<boolean>(true);
   useEffect(() => {
       const verifyUser = async () => {
         debugger

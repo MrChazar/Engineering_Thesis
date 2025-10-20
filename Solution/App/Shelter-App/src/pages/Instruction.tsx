@@ -5,7 +5,7 @@ import NotAvailible from "../components/NotAvailible";
 function Instruction() {
   return (
     <NotAvailible>
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-secondary flex flex-col">
         <Header />
         <main className="flex flex-1 flex-col items-center justify-start gap-10 p-10">
             <section className="max-w-5xl bg-primary rounded-2xl shadow-lg p-8 flex flex-col gap-6">
