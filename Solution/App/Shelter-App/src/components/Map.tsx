@@ -320,10 +320,10 @@ function Map({ data }: MapProps) {
 
       {addPanel && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white m-4 text-black p-6 rounded-2xl shadow-2xl w-[420px] max-h-[50vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-6 text-center">Dodaj punkt</h2>
+          <div className="bg-white m-4 text-black p-2 rounded-2xl shadow-2xl w-[420px] max-h-[45vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-2 text-center">Dodaj punkt</h2>
 
-            <div className="grid grid-cols-3 gap-4 items-center">
+            <div className="grid grid-cols-3 gap-1 items-center">
               <label className="font-semibold text-right col-span-1">Typ:</label>
               <select
                 value={formType}
@@ -354,7 +354,7 @@ function Map({ data }: MapProps) {
 
               {formType === "shelter" && (
                 <>
-                  <label className="font-semibold text-right col-span-1">Capacity:</label>
+                  <label className="font-semibold text-right col-span-1">Pojemność:</label>
                   <input
                     type="number"
                     value={capacity}
@@ -362,7 +362,7 @@ function Map({ data }: MapProps) {
                     className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
                   />
 
-                  <label className="font-semibold text-right col-span-1">Cost:</label>
+                  <label className="font-semibold text-right col-span-1">Koszt:</label>
                   <input
                     type="number"
                     value={cost}
@@ -373,7 +373,7 @@ function Map({ data }: MapProps) {
               )}
             </div>
 
-            <div className="flex justify-end mt-6 gap-2">
+            <div className="flex justify-end mt-2 gap-2">
               <button
                 onClick={() => setAddPanel(false)}
                 className="px-4 py-2 border rounded-md hover:bg-gray-100 transition"
@@ -410,16 +410,16 @@ function Map({ data }: MapProps) {
               <p><b>Apartment</b></p>
               <p>id: {selected.id}</p>
               <p>x: {selected.x.toFixed(6)}, y: {selected.y.toFixed(6)}</p>
-              <p>assigned_to: {selected.assigned_to ?? "none"}</p>
+              <p>przypisany do: {selected.assigned_to ?? "none"}</p>
             </div>
           ) : (
             <div className="text-black">
               <p><b>Shelter</b></p>
               <p>id: {selected.id}</p>
               <p>x: {selected.x.toFixed(6)}, y: {selected.y.toFixed(6)}</p>
-              <p>cost: {selected.cost ?? "unknown"}</p>
-              <p>capacity: {selected.capacity ?? "unknown"}</p>
-              <p>apartments assigned: {
+              <p>koszt: {selected.cost ?? "unknown"}</p>
+              <p>Pojemność: {selected.capacity ?? "unknown"}</p>
+              <p>przypisane obiekty: {
                 data?.points.filter(p => p.type === "apartment" && p.assigned_to === selected.id).length
               }</p>
             </div>
@@ -449,10 +449,10 @@ function Map({ data }: MapProps) {
 
       {editPanel && selected && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white m-4 text-black p-6 rounded-2xl shadow-2xl w-[420px] max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-6 text-center">Edytuj punkt</h2>
+          <div className="bg-white m-4 text-black p-2 rounded-2xl shadow-2xl w-[420px] max-h-[45vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-2 text-center">Edytuj punkt</h2>
 
-            <div className="grid grid-cols-3 gap-4 items-center">
+            <div className="grid grid-cols-3 gap-1 items-center">
               <label className="font-semibold text-right col-span-1">X:</label>
               <input
                 type="number"
@@ -492,7 +492,7 @@ function Map({ data }: MapProps) {
               )}
             </div>
 
-            <div className="flex justify-end mt-6 gap-2">
+            <div className="flex justify-end mt-2 gap-2">
               <button
                 onClick={() => setEditPanel(false)}
                 className="px-4 py-2 border rounded-md hover:bg-gray-100 transition"

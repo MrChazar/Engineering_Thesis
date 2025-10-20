@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import "../src/App.css"
 import Map from "./components/Map";
 import {type PointType, type AllocationPoint, type ShelterAllocationResponse, type ShelterAllocationRequest } from "./types/ShelterTypes"
@@ -17,6 +17,7 @@ function App() {
     averagePersonPerBuilding: ""
   });
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState<string>("Ładowanie");
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +48,40 @@ function App() {
       setLoadingText(texts[index]);
     }, 2000);
   })
+
+  const handleLoadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const json = JSON.parse(e.target?.result as string);
+        setAllocations(json);
+        alert("Konfiguracja została wczytana.");
+      } catch (err) {
+        alert("Błąd wczytywania pliku. Upewnij się, że to poprawny JSON.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleSaveClick = () => {
+    if (!allocations) return;
+    const blob = new Blob([JSON.stringify(allocations, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "konfiguracja.json";
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
 
   async function FormSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -106,10 +141,10 @@ function App() {
 
   return (
     <NotAvailible>
-      <div className="h-screen flex flex-col bg-secondary overflow-hidden">
+      <div className="h-screen flex flex-col bg-white overflow-hidden">
         <Header />
         <main className="flex flex-1 p-4 gap-4 overflow-hidden">
-          <section className="w-1/3 bg-primary  rounded-2xl p-6 flex flex-col justify-between shadow-md">
+          <section className="w-1/3 bg-primary rounded-2xl p-6 flex flex-col justify-between shadow-md">
             <div>
               <h1 className="text-center text-2xl font-extrabold text-black mb-6 tracking-wide">
               Parametry Procesu
@@ -170,7 +205,7 @@ function App() {
           </section>
 
           <section className="flex-1 bg-primary rounded-2xl p-4 flex flex-col shadow-md overflow-hidden">
-            <h1 className="text-center text-2xl font-extrabold text-black mb-3 tracking-wide">
+            <h1 className="text-center text-2xl font-extrabold text-black tracking-wide">
               Wizualizacja
             </h1>
 
@@ -178,22 +213,45 @@ function App() {
               {allocations?.points ? (
                 <Map data={allocations} />
               ) : (
-                <></>
+                <>
+                  {loading==false ? (
+                    <>
+                      <button
+                        onClick={handleLoadClick}
+                        className="px-6 py-3 bg-black text-primary rounded-full font-bold hover:bg-gray-800 transition"
+                      >
+                        📂 Wczytaj konfigurację
+                      </button>
+                      <input
+                        type="file"
+                        accept=".json"
+                        ref={fileInputRef}
+                        style={{ display: "none" }}
+                        onChange={handleFileSelected} />
+                    </>
+                    ): (<></>)
+                  }
+                </>
               )}
             </div>
 
             {allocations?.objective && (
-              <div className="bg-white rounded-2xl shadow-md m-2 p-4">
-                <h2 className="text-gray-800 font-semibold text-lg mb-2">Wyniki optymalizacji</h2>
-                <p className="text-gray-700 text-base">
-                  <span className="font-bold text-black">Wartość funkcji celu:</span> {allocations.objective.toFixed(2)}
-                </p>
-                <p className="text-gray-700 text-base">
-                  <span className="font-bold text-black">Użyty budżet:</span> {(allocations.used_budget*1000000).toLocaleString()} zł
-                </p>
-                <p className="text-gray-700 text-base">
-                  <span className="font-bold text-black">Proces zajął:</span> {(allocations.time).toLocaleString()} minut
-                </p>
+              <div className="bg-white rounded-2xl grid grid-cols-2 shadow-md m-2 p-4">
+                <div> 
+                  <h2 className="text-gray-800 font-semibold text-lg mb-2">Wyniki optymalizacji</h2>
+                  <p className="text-gray-700 text-base">
+                    <span className="font-bold text-black">Wartość funkcji celu:</span> {allocations.objective.toFixed(2)}
+                  </p>
+                  <p className="text-gray-700 text-base">
+                    <span className="font-bold text-black">Użyty budżet:</span> {(allocations.used_budget*1000000).toLocaleString()} zł
+                  </p>
+                  <p className="text-gray-700 text-base">
+                    <span className="font-bold text-black">Proces zajął:</span> {(allocations.time).toLocaleString()} minut
+                  </p>
+                </div>
+                <div className="text-right">
+                  <button  onClick={handleSaveClick} className="bg-black text-primary">Zapisz Konfiguracje</button>
+                </div>
               </div>
             )}
           </section>
