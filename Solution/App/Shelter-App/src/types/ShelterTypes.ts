@@ -10,11 +10,23 @@ export interface AllocationPoint {
   capacity: number; 
 }
 
+export interface stats
+{
+  total_population: number,
+  covered_population: number,
+  percent_covered: number,
+  average_distance: number,
+  average_cost_built: number,
+  built_shelters: number,
+  capacity_fill_percent: number
+}
+
 export interface ShelterAllocationResponse {
   points: AllocationPoint[];
   objective: number;   
   used_budget: number;
-  time: number;      
+  time: number;
+  stats: stats      
 }
 
 export interface ShelterAllocationRequest {
@@ -22,7 +34,6 @@ export interface ShelterAllocationRequest {
   model: string;
   allowedDistance: number;
   averagePersonPerBuilding: number;
-  token: string | null;
 }
 
 export interface AddShelterRequest {

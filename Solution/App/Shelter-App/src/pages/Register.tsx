@@ -41,7 +41,7 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-secondary flex flex-col">
         <Header />
 
         <main className="flex flex-1 gap-4 p-6">

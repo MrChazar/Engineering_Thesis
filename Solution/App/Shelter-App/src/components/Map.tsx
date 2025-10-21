@@ -320,7 +320,7 @@ function Map({ data }: MapProps) {
 
       {addPanel && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white m-4 text-black p-2 rounded-2xl shadow-2xl w-[420px] max-h-[45vh] overflow-y-auto">
+          <div className="bg-white m-4 text-black p-2 rounded-2xl shadow-2xl w-[420px] max-h-[50vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-2 text-center">Dodaj punkt</h2>
 
             <div className="grid grid-cols-3 gap-1 items-center">

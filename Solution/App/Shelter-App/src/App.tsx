@@ -116,7 +116,6 @@ function App() {
         model: form.model,
         allowedDistance: parseFloat(form.allowedDistance),
         averagePersonPerBuilding: parseInt(form.averagePersonPerBuilding),
-        token: sessionStorage.getItem("token")
       };
 
       const response = await apiService.getShelterAllocations(request);
@@ -124,7 +123,8 @@ function App() {
         points: response.points,
         objective: response.objective,
         used_budget: response.used_budget,
-        time: response.time
+        time: response.time,
+        stats: response.stats
       });
       
       success = true;
@@ -142,7 +142,7 @@ function App() {
 
   return (
     <NotAvailible>
-      <div className="h-screen flex flex-col bg-white overflow-hidden">
+      <div className="min-h-screen flex flex-col bg-white overflow-y-auto">
         <Header />
         <main className="flex flex-1 p-4 gap-4 overflow-hidden">
           <section className="w-1/3 bg-primary rounded-2xl p-6 flex flex-col justify-between shadow-md">
@@ -205,12 +205,12 @@ function App() {
             {loading && <p className="text-center text-gray-700 mt-4">{loadingText}</p>}
           </section>
 
-          <section className="flex-1 bg-primary rounded-2xl p-4 flex flex-col shadow-md overflow-hidden">
+          <section className="flex-2 bg-primary rounded-2xl p-4 flex flex-col shadow-md overflow-hidden">
             <h1 className="text-center text-2xl font-extrabold text-black tracking-wide">
               Wizualizacja
             </h1>
 
-            <div className="flex-1 rounded-xl overflow-hidden">
+            <div className="flex-2 min-h-[350px] max-h-[800px] rounded-xl overflow-hidden">
               {allocations?.points ? (
                 <Map data={allocations} />
               ) : (
@@ -237,23 +237,43 @@ function App() {
             </div>
 
             {allocations?.objective && (
-              <div className="bg-white rounded-2xl grid grid-cols-2 shadow-md m-2 p-4">
-                <div> 
-                  <h2 className="text-gray-800 font-semibold text-lg mb-2">Wyniki optymalizacji</h2>
-                  <p className="text-gray-700 text-base">
-                    <span className="font-bold text-black">Wartość funkcji celu:</span> {allocations.objective.toFixed(2)}
-                  </p>
-                  <p className="text-gray-700 text-base">
-                    <span className="font-bold text-black">Użyty budżet:</span> {(allocations.used_budget*1000000).toLocaleString()} zł
-                  </p>
-                  <p className="text-gray-700 text-base">
-                    <span className="font-bold text-black">Proces zajął:</span> {(allocations.time).toLocaleString()} minut
-                  </p>
-                </div>
-                <div className="text-right">
-                  <button  onClick={handleSaveClick} className="bg-black text-primary">Zapisz Konfiguracje</button>
-                </div>
-              </div>
+              <>
+                <div className="bg-white rounded-2xl grid grid-cols-2 shadow-md m-2 p-4">
+                  <div>
+                    <h2 className="text-gray-800 font-semibold text-lg mb-2">Wyniki optymalizacji</h2>
+                    <p className="text-gray-700 text-base">
+                      <span className="font-bold text-black">Wartość funkcji celu:</span> {allocations.objective.toFixed(2)}
+                    </p>
+                    <p className="text-gray-700 text-base">
+                      <span className="font-bold text-black">Użyty budżet:</span> {(allocations.used_budget*1000000).toLocaleString()} zł
+                    </p>
+                    <p className="text-gray-700 text-base">
+                      <span className="font-bold text-black">Proces zajął:</span> {(allocations.time).toLocaleString()} minut
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-gray-700 text-base">
+                      <span className="font-bold text-black">Ilość obsłużonych mieszkańców:</span> {allocations.stats.covered_population}
+                    </p>
+                    <p className="text-gray-700 text-base">
+                      <span className="font-bold text-black">Procent obsłużonych mieszkańców:</span> {allocations.stats.percent_covered} %
+                    </p>
+                    <p className="text-gray-700 text-base">
+                      <span className="font-bold text-black">Średnia odległość do schronu:</span> {allocations.stats.average_distance} km
+                    </p>
+                    <p className="text-gray-700 text-base">
+                      <span className="font-bold text-black">Średni koszt budowy:</span> {allocations.stats.average_cost_built*1000000} zł
+                    </p>
+                    <p className="text-gray-700 text-base">
+                      <span className="font-bold text-black">Wybudowane schrony:</span> {allocations.stats.built_shelters}
+                    </p>
+                    <p className="text-gray-700 text-base">
+                      <span className="font-bold text-black">Procent zapełnienia schronów:</span> {allocations.stats.capacity_fill_percent} %
+                    </p>
+                    <button  onClick={handleSaveClick} className="bg-black text-primary">Zapisz Konfiguracje</button>
+                  </div>
+              </div> 
+              </>
             )}
           </section>
         </main>

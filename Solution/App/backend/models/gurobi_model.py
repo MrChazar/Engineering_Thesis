@@ -46,8 +46,7 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
 
     M = [[row["x"], row["y"]] for row in residential_buildings]
 
-    r = [[geodesic(l, m).kilometers for m in M] for l in L]
-    r = np.array(r)
+    r = np.array([[geodesic(l, m).kilometers for m in M] for l in L])
 
     # Koszty i pojemności
     c = [row["cost"] for row in new_shelters] + [0] * e
@@ -102,16 +101,28 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
 
     if model.status == GRB.OPTIMAL:
         points = []
+        total_population = h * averagePersonPerBuilding
+        assigned_buildings = 0
+        total_distance = 0.0
+        built_shelters = 0
+        total_built_cost = 0
+        total_capacity_used = 0
+        total_capacity_available = 0
 
         for i, coords in enumerate(L):
             if i < s:
                 point_id = ids_new[i]
                 schron_type = "built_shelter" if y[i].X > 0.5 else "potential_shelter"
                 cost = c[i]
+                if y[i].X > 0.5:
+                    built_shelters += 1
+                    total_built_cost += cost
+                    total_capacity_available += capacity[i]
             else:
                 point_id = ids_existing[i - s]
                 schron_type = "built_shelter"
                 cost = 0
+                total_capacity_available += capacity[i]
 
             points.append({
                 "id": int(point_id),
@@ -123,13 +134,19 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
                 "capacity": capacity[i]
             })
 
-        # mieszkania
         for n, coords in enumerate(M):
             assigned_to = None
+            dist_to_shelter = None
             for i in range(s + e):
                 if x[(i, n)].X > 0.5:
                     assigned_to = ids_new[i] if i < s else ids_existing[i - s]
+                    dist_to_shelter = r[i, n]
                     break
+
+            if assigned_to:
+                assigned_buildings += 1
+                total_distance += dist_to_shelter
+                total_capacity_used += averagePersonPerBuilding
 
             points.append({
                 "id": int(ids_res[n]),
@@ -143,11 +160,22 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
 
         used_budget = sum(c[i] * int(round(y[i].X)) for i in range(s + e))
 
+        stats = {
+            "total_population": total_population,
+            "covered_population": assigned_buildings * averagePersonPerBuilding,
+            "percent_covered": round((assigned_buildings / h) * 100, 2),
+            "average_distance": round(total_distance / assigned_buildings, 3) if assigned_buildings > 0 else 0,
+            "average_cost_built": round(total_built_cost / built_shelters, 2) if built_shelters > 0 else 0,
+            "built_shelters": built_shelters,
+            "capacity_fill_percent": round((total_capacity_used / total_capacity_available) * 100, 2) if total_capacity_available > 0 else 0
+        }
+
         return {
             "points": points,
             "objective": float(model.objVal),
             "used_budget": used_budget,
-            "time": int((time.time() - start) / 60)
+            "time": int((time.time() - start) / 60),
+            "stats": stats
         }
     else:
         return {"status": "no_optimal_solution"}
