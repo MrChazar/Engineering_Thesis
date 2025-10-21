@@ -115,7 +115,8 @@ function App() {
         budget: parseFloat(form.budget),
         model: form.model,
         allowedDistance: parseFloat(form.allowedDistance),
-        averagePersonPerBuilding: parseInt(form.averagePersonPerBuilding)
+        averagePersonPerBuilding: parseInt(form.averagePersonPerBuilding),
+        token: sessionStorage.getItem("token")
       };
 
       const response = await apiService.getShelterAllocations(request);

@@ -1,14 +1,32 @@
 from fastapi import APIRouter
 from Solution.App.backend.models import gnn_model as gnn, gurobi_model as gurobi, shelter_service as ss
+from pydantic import BaseModel
+import middleware as mid
+from fastapi import HTTPException, status
+
+class Allocation_Request(BaseModel):
+    budget: float
+    model: str
+    allowedDistance: float
+    averagePersonPerBuilding: int
+    token: str
 
 router = APIRouter(prefix="/allocations", tags=["allocations"])
 
-@router.get("/{budget}/{allowedDistance}/{averagePersonPerBuilding}/{model}")
-def get_shelter_allocations(budget: float, allowedDistance: float, averagePersonPerBuilding: int, model: str):
-    print(f"Parametry: {budget} {allowedDistance} {averagePersonPerBuilding} {model}")
+@router.post("/optimize")
+def get_shelter_allocations(body: Allocation_Request):
+    print(f"Parametry: {body.budget} {body.allowedDistance} {body.averagePersonPerBuilding} {body.model} {body.token}")
+
+    try:
+        verify = mid.verify_token(body.token)
+    except:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    if(not verify):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
     result = None
-    if model == "GNN":
-        result = gnn.get_shelter_allocation(budget, allowedDistance, averagePersonPerBuilding)
-    elif model == "GUROBI":
-        result = gurobi.get_shelter_allocation(budget, allowedDistance, averagePersonPerBuilding)
+    if body.model == "GNN":
+        result = gnn.get_shelter_allocation(body.budget, body.allowedDistance, body.averagePersonPerBuilding)
+    elif body.model == "GUROBI":
+        result = gurobi.get_shelter_allocation(body.budget, body.allowedDistance, body.averagePersonPerBuilding)
     return result

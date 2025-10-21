@@ -16,9 +16,20 @@ import {
   type verifyResponse
 } from "./types/ShelterTypes";
 
+const token = sessionStorage.getItem("token");
+
 export const apiService = {
   async getShelterAllocations(params: ShelterAllocationRequest): Promise<ShelterAllocationResponse> {
-    const response = await fetch(`http://localhost:8000/allocations/${params.budget}/${params.allowedDistance}/${params.averagePersonPerBuilding}/${params.model}`);
+    const response = await fetch("http://localhost:8000/allocations/optimize", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...params,
+        token: token || "",
+      }),
+    });
     window.console.log(response);
     
     if (!response.ok) {
@@ -31,7 +42,15 @@ export const apiService = {
   async addShelter(params: AddShelterRequest): Promise<AddShelterResponse> {
 
     const response = await fetch(
-      `http://localhost:8000/shelters/${params.x}/${params.y}/${params.capacity}/${params.cost}`, { method: "POST"}
+      `http://localhost:8000/shelters/${params.x}/${params.y}/${params.capacity}/${params.cost}`, { 
+        method: "POST",
+        headers: {
+        "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token: token || "",
+        }),
+      }
     );
 
     if (!response.ok) {
@@ -43,7 +62,15 @@ export const apiService = {
   async addResidentialBuilding(params: AddResidentialBuildingRequest): Promise<AddResidentialBuildingResponse> {
     
     const response = await fetch(
-      `http://localhost:8000/residential_buildings/${params.x}/${params.y}`, { method: "POST"}
+      `http://localhost:8000/residential_buildings/${params.x}/${params.y}`, { 
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token: token || "",
+        }),
+      }
     );
 
     if (!response.ok) {
@@ -56,7 +83,15 @@ export const apiService = {
   async editShelter(params: EditShelterRequest): Promise<{ status: string }> {
     const response = await fetch(
       `http://localhost:8000/shelters/${params.id}/${params.x}/${params.y}/${params.capacity}/${params.cost}`,
-      { method: "PUT" }
+      { 
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token: token || "",
+        }), 
+      }
     );
     if (!response.ok) throw new Error("Błąd edycji schronu");
     return response.json();
@@ -65,7 +100,15 @@ export const apiService = {
   async deleteShelter(id: number): Promise<{ status: string }> {
     const response = await fetch(
       `http://localhost:8000/shelters/${id}`,
-      { method: "DELETE" }
+      { 
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token: token || "",
+        }),
+      }
     );
     if (!response.ok) throw new Error("Błąd usuwania schronu");
     return response.json();
@@ -74,7 +117,15 @@ export const apiService = {
   async editResidentialBuilding(params: EditResidentialBuildingRequest): Promise<{ status: string }> {
     const response = await fetch(
       `http://localhost:8000/residential_buildings/${params.id}/${params.x}/${params.y}`,
-      { method: "PUT" }
+      { 
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token: token || "",
+        }),
+      }
     );
     if (!response.ok) throw new Error("Błąd edycji budynku mieszkalnego");
     return response.json();
@@ -83,7 +134,15 @@ export const apiService = {
   async deleteResidentialBuilding(id: number): Promise<{ status: string }> {
     const response = await fetch(
       `http://localhost:8000/residential_buildings/${id}`,
-      { method: "DELETE" }
+      { 
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token: token || "",
+        }),
+      }
     );
     if (!response.ok) throw new Error("Błąd usuwania budynku mieszkalnego");
     return response.json();
@@ -121,7 +180,7 @@ export const apiService = {
     const response = await fetch("http://localhost:8000/users/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }), // <-- KLUCZOWE
+      body: JSON.stringify({ token }), 
     });
 
     if (!response.ok) {

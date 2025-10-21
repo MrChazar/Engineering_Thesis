@@ -5,6 +5,11 @@ from Solution.App.backend.models import gnn_model as gnn, gurobi_model as gurobi
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
+import middleware as mid
+
+# Dto's
+class VerifyRequest(BaseModel):
+    token: str
 
 class LoginRequest(BaseModel):
     login: str
@@ -16,8 +21,7 @@ class RegisterRequest(BaseModel):
     email: str
     password: str
 
-class VerifyRequest(BaseModel):
-    token: str
+
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -35,14 +39,10 @@ def register(body: RegisterRequest):
     info = us.register(body.name, body.surname, body.email, body.password)
     return {"success": info}
 
-
 @router.post("/verify")
 def verify_token(body: VerifyRequest):
-    try:
-        payload = jwt.decode(body.token, us.SECRET_KEY, algorithms=[us.ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
+    result = mid.verify_token(body.token)
+    if result:
         return {"valid": True}
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    else:
+        return {"valid": False}
