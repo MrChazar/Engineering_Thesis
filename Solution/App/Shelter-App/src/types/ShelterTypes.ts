@@ -16,6 +16,7 @@ export interface stats
   covered_population: number,
   percent_covered: number,
   average_distance: number,
+  total_built_cost: number,
   average_cost_built: number,
   built_shelters: number,
   capacity_fill_percent: number

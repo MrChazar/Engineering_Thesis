@@ -165,6 +165,7 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
             "covered_population": assigned_buildings * averagePersonPerBuilding,
             "percent_covered": round((assigned_buildings / h) * 100, 2),
             "average_distance": round(total_distance / assigned_buildings, 3) if assigned_buildings > 0 else 0,
+            "total_built_cost": round(total_built_cost),
             "average_cost_built": round(total_built_cost / built_shelters, 2) if built_shelters > 0 else 0,
             "built_shelters": built_shelters,
             "capacity_fill_percent": round((total_capacity_used / total_capacity_available) * 100, 2) if total_capacity_available > 0 else 0

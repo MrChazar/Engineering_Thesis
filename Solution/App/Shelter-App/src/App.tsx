@@ -142,7 +142,7 @@ function App() {
 
   return (
     <NotAvailible>
-      <div className="min-h-screen flex flex-col bg-white overflow-y-auto">
+      <div className="min-h-screen flex flex-col bg-secondary overflow-y-auto">
         <Header />
         <main className="flex flex-1 p-4 gap-4 overflow-hidden">
           <section className="w-1/3 bg-primary rounded-2xl p-6 flex flex-col justify-between shadow-md">
@@ -252,6 +252,7 @@ function App() {
                     </p>
                   </div>
                   <div className="text-right">
+                    <h2 className="text-gray-800 font-semibold text-lg mb-2">Statystyki</h2>
                     <p className="text-gray-700 text-base">
                       <span className="font-bold text-black">Ilość obsłużonych mieszkańców:</span> {allocations.stats.covered_population}
                     </p>
@@ -260,6 +261,9 @@ function App() {
                     </p>
                     <p className="text-gray-700 text-base">
                       <span className="font-bold text-black">Średnia odległość do schronu:</span> {allocations.stats.average_distance} km
+                    </p>
+                    <p className="text-gray-700 text-base">
+                      <span className="font-bold text-black">Całkowity koszt wybudowanych schronów:</span> {allocations.stats.total_built_cost*1000000} zł
                     </p>
                     <p className="text-gray-700 text-base">
                       <span className="font-bold text-black">Średni koszt budowy:</span> {allocations.stats.average_cost_built*1000000} zł
