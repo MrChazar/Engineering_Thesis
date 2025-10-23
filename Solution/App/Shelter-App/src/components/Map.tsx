@@ -3,10 +3,12 @@ import DeckGL from "@deck.gl/react";
 import { ScatterplotLayer, LineLayer } from "@deck.gl/layers";
 import { TileLayer } from "@deck.gl/geo-layers";
 import { BitmapLayer } from "@deck.gl/layers";
-import { type ShelterAllocationResponse, type AllocationPoint } from "../types/ShelterTypes";
+import {
+  type ShelterAllocationResponse,
+  type AllocationPoint,
+} from "../types/ShelterTypes";
 import { apiService } from "../Api";
 
-// set on Wrocław
 const INITIAL_VIEW_STATE = {
   longitude: 17.0385,
   latitude: 51.1079,
@@ -44,7 +46,7 @@ function Map({ data }: MapProps) {
   const [editCost, setEditCost] = useState<number>(0);
 
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
+  const [assigningApartmentId, setAssigningApartmentId] = useState<number | null>(null);
 
   // for adding points by clicking q
   useEffect(() => {
@@ -62,28 +64,124 @@ function Map({ data }: MapProps) {
     };
   }, []);
 
+  const handleActivateShelter = () => {
+    if (!selected || selected.type !== "potential_shelter") return;
+
+    const shelterId = selected.id;
+    let updatedPoint: AllocationPoint | undefined;
+
+    setLocalData((prev) => {
+      if (!prev) return prev;
+      const newPoints = prev.points.map((p) => {
+        if (p.id === shelterId) {
+          updatedPoint = { ...p, type: "built_shelter" };
+          return updatedPoint;
+        }
+        return p;
+      });
+      return { ...prev, points: newPoints };
+    });
+
+    // Zaktualizuj 'selected', aby panel odzwierciedlał zmianę
+    if (updatedPoint) {
+      setSelected(updatedPoint);
+    }
+    setSuccessMessage("Aktywowano schron!");
+  };
+
+  const handleAssignApartment = (apartmentId: number, shelterId: number) => {
+    setLocalData((prev) => {
+      if (!prev) return prev;
+      const newPoints = prev.points.map((p) => {
+        if (p.id === apartmentId) {
+          return { ...p, assigned_to: shelterId };
+        }
+        return p;
+      });
+      return { ...prev, points: newPoints };
+    });
+
+    setSuccessMessage("Przypisano obiekt do schronu!");
+    setAssigningApartmentId(null);
+  };
+
+  const handleUnassignApartment = () => {
+    if (
+      !selected ||
+      selected.type !== "apartment" ||
+      selected.assigned_to === null
+    )
+      return;
+
+    const apartmentId = selected.id;
+    let updatedPoint: AllocationPoint | undefined;
+
+    setLocalData((prev) => {
+      if (!prev) return prev;
+      const newPoints = prev.points.map((p) => {
+        if (p.id === apartmentId) {
+          updatedPoint = { ...p, assigned_to: null };
+          return updatedPoint;
+        }
+        return p;
+      });
+      return { ...prev, points: newPoints };
+    });
+
+    if (updatedPoint) {
+      setSelected(updatedPoint);
+    }
+    setSuccessMessage("Usunięto przypisanie obiektu!");
+  };
+
   const layers = useMemo(() => {
     if (!localData) return [];
 
-    const potentialShelters = localData.points.filter(p => p.type === "potential_shelter");
-    const builtShelters = localData.points.filter(p => p.type === "built_shelter");
-    const assigned_apartments = localData.points.filter(p => p.type === "apartment" && p.assigned_to !== null);
-    const unassigned_apartments = localData.points.filter(p => p.type === "apartment" && p.assigned_to === null);
+    const potentialShelters = localData.points.filter(
+      (p) => p.type === "potential_shelter",
+    );
+    const builtShelters = localData.points.filter(
+      (p) => p.type === "built_shelter",
+    );
+    const assigned_apartments = localData.points.filter(
+      (p) => p.type === "apartment" && p.assigned_to !== null,
+    );
+    const unassigned_apartments = localData.points.filter(
+      (p) => p.type === "apartment" && p.assigned_to === null,
+    );
 
     const lines = assigned_apartments
-      .map(a => {
-        const shelter = localData.points.find(p => p.id === a.assigned_to);
-        return shelter ? { source: [a.x, a.y], target: [shelter.x, shelter.y] } : null;
+      .map((a) => {
+        const shelter = localData.points.find((p) => p.id === a.assigned_to);
+        return shelter
+          ? { source: [a.x, a.y], target: [shelter.x, shelter.y] }
+          : null;
       })
-      .filter(l => l !== null);
+      .filter((l) => l !== null);
 
     const commonLayerProps = {
       pickable: true,
       onClick: (info: any) => {
-        if (info.object) {
-          setSelected(info.object as AllocationPoint);
+        if (!info.object) return;
+
+        const clickedPoint = info.object as AllocationPoint;
+
+        if (assigningApartmentId !== null) {
+          if (
+            clickedPoint.type === "built_shelter" ||
+            clickedPoint.type === "potential_shelter"
+          ) {
+            handleAssignApartment(assigningApartmentId, clickedPoint.id);
+          } else {
+            alert(
+              "Wybierz schron (zielony lub czerwony), aby przypisać obiekt.",
+            );
+            setAssigningApartmentId(null);
+          }
+        } else {
+          setSelected(clickedPoint);
         }
-      }
+      },
     };
 
     return [
@@ -109,53 +207,53 @@ function Map({ data }: MapProps) {
       new ScatterplotLayer<AllocationPoint>({
         id: "potential-shelters",
         data: potentialShelters,
-        getPosition: d => [d.x, d.y],
+        getPosition: (d) => [d.x, d.y],
         getFillColor: [255, 0, 0],
         getRadius: 15,
-        ...commonLayerProps
+        ...commonLayerProps,
       }),
 
       new ScatterplotLayer<AllocationPoint>({
         id: "built-shelters",
         data: builtShelters,
-        getPosition: d => [d.x, d.y],
+        getPosition: (d) => [d.x, d.y],
         getFillColor: [0, 200, 0],
         getRadius: 15,
-        ...commonLayerProps
+        ...commonLayerProps,
       }),
 
       new ScatterplotLayer<AllocationPoint>({
         id: "unassigned-apartments",
         data: unassigned_apartments,
-        getPosition: d => [d.x, d.y],
+        getPosition: (d) => [d.x, d.y],
         getFillColor: [0, 0, 0],
         getRadius: 5,
-        ...commonLayerProps
+        ...commonLayerProps,
       }),
 
       new ScatterplotLayer<AllocationPoint>({
         id: "assigned-apartments",
         data: assigned_apartments,
-        getPosition: d => [d.x, d.y],
+        getPosition: (d) => [d.x, d.y],
         getFillColor: [230, 186, 11],
         getRadius: 5,
-        ...commonLayerProps
+        ...commonLayerProps,
       }),
 
       new LineLayer({
         id: "apartment-to-shelter",
         data: lines,
-        getSourcePosition: d => d!.source,
-        getTargetPosition: d => d!.target,
+        getSourcePosition: (d) => d!.source,
+        getTargetPosition: (d) => d!.target,
         getColor: [0, 0, 0],
         getWidth: 1,
-      })
+      }),
     ];
-  }, [localData]);
+  }, [localData, assigningApartmentId]);
 
-  const generateLocalId = () => Math.max(0, ...(localData?.points.map((p) => p.id) || [0])) + 1;
+  const generateLocalId = () =>
+    Math.max(0, ...(localData?.points.map((p) => p.id) || [0])) + 1;
 
-  // for adding new shelters, residential buildings
   const handleAdd = async () => {
     if (x === null || y === null) return;
 
@@ -172,7 +270,7 @@ function Map({ data }: MapProps) {
           assigned_to: null,
         };
         setLocalData((prev) =>
-          prev ? { ...prev, points: [...prev.points, newPoint] } : prev
+          prev ? { ...prev, points: [...prev.points, newPoint] } : prev,
         );
         setSuccessMessage("Dodano nowy schron!");
       } else {
@@ -187,7 +285,7 @@ function Map({ data }: MapProps) {
           assigned_to: null,
         };
         setLocalData((prev) =>
-          prev ? { ...prev, points: [...prev.points, newPoint] } : prev
+          prev ? { ...prev, points: [...prev.points, newPoint] } : prev,
         );
         setSuccessMessage("Dodano nowy budynek mieszkalny!");
       }
@@ -197,7 +295,6 @@ function Map({ data }: MapProps) {
     }
   };
 
-  // for editing shelter and residential building informations
   const handleEdit = async () => {
     if (!selected) return;
     try {
@@ -214,10 +311,10 @@ function Map({ data }: MapProps) {
                 points: prev.points.map((p) =>
                   p.id === selected.id
                     ? { ...p, x: editX ?? p.x, y: editY ?? p.y }
-                    : p
+                    : p,
                 ),
               }
-            : prev
+            : prev,
         );
         setSuccessMessage("Zaktualizowano budynek mieszkalny!");
       } else {
@@ -241,10 +338,10 @@ function Map({ data }: MapProps) {
                         capacity: editCapacity ?? p.capacity,
                         cost: editCost ?? p.cost,
                       }
-                    : p
+                    : p,
                 ),
               }
-            : prev
+            : prev,
         );
         setSuccessMessage("Zaktualizowano schron!");
       }
@@ -255,8 +352,6 @@ function Map({ data }: MapProps) {
     }
   };
 
-
-  // for deleting
   const handleDelete = async () => {
     if (!selected) return;
     const confirmed = confirm("Czy na pewno chcesz usunąć ten punkt?");
@@ -273,7 +368,7 @@ function Map({ data }: MapProps) {
       setLocalData((prev) =>
         prev
           ? { ...prev, points: prev.points.filter((p) => p.id !== selected.id) }
-          : prev
+          : prev,
       );
       setSelected(null);
     } catch (e) {
@@ -295,18 +390,21 @@ function Map({ data }: MapProps) {
             setY(info.coordinate[1]);
           }
         }}
-
         onClick={(info) => {
           if (!info.object) {
             setSelected(null);
+            if (assigningApartmentId) {
+              setAssigningApartmentId(null);
+              setSuccessMessage("Anulowano przypisywanie.");
+            }
           }
         }}
       />
 
       {coordinate && (
         <div className="absolute bottom-4 right-4 bg-white shadow-lg p-4 rounded text-sm max-w-xs">
-          <button 
-            onClick={() => setAddPanel(true)} 
+          <button
+            onClick={() => setAddPanel(true)}
             className="bg-primary text-white px-3 py-1 rounded"
           >
             Dodaj
@@ -327,7 +425,9 @@ function Map({ data }: MapProps) {
               <label className="font-semibold text-right col-span-1">Typ:</label>
               <select
                 value={formType}
-                onChange={(e) => setFormType(e.target.value as "shelter" | "apartment")}
+                onChange={(e) =>
+                  setFormType(e.target.value as "shelter" | "apartment")
+                }
                 className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
               >
                 <option value="shelter">Shelter</option>
@@ -354,7 +454,9 @@ function Map({ data }: MapProps) {
 
               {formType === "shelter" && (
                 <>
-                  <label className="font-semibold text-right col-span-1">Pojemność:</label>
+                  <label className="font-semibold text-right col-span-1">
+                    Pojemność:
+                  </label>
                   <input
                     type="number"
                     value={capacity}
@@ -362,7 +464,9 @@ function Map({ data }: MapProps) {
                     className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
                   />
 
-                  <label className="font-semibold text-right col-span-1">Koszt:</label>
+                  <label className="font-semibold text-right col-span-1">
+                    Koszt:
+                  </label>
                   <input
                     type="number"
                     value={cost}
@@ -394,7 +498,7 @@ function Map({ data }: MapProps) {
       {successMessage && (
         <div className="absolute top-4 right-4 bg-primary text-white px-4 py-2 rounded shadow">
           {successMessage}
-          <button 
+          <button
             className="ml-2 font-bold"
             onClick={() => setSuccessMessage(null)}
           >
@@ -407,24 +511,39 @@ function Map({ data }: MapProps) {
         <div className="absolute bottom-4 left-4 bg-white shadow-lg p-4 rounded text-sm max-w-xs">
           {selected.type === "apartment" ? (
             <div className="text-black">
-              <p><b>Apartment</b></p>
+              <p>
+                <b>Apartment</b>
+              </p>
               <p>id: {selected.id}</p>
-              <p>x: {selected.x.toFixed(6)}, y: {selected.y.toFixed(6)}</p>
+              <p>
+                x: {selected.x.toFixed(6)}, y: {selected.y.toFixed(6)}
+              </p>
               <p>przypisany do: {selected.assigned_to ?? "none"}</p>
             </div>
           ) : (
             <div className="text-black">
-              <p><b>Shelter</b></p>
+              <p>
+                <b>Shelter</b>
+              </p>
+              <p>
+                Typ:{" "}
+                {selected.type === "potential_shelter" ? "Potencjalny" : "Aktywny"}
+              </p>
               <p>id: {selected.id}</p>
-              <p>x: {selected.x.toFixed(6)}, y: {selected.y.toFixed(6)}</p>
+              <p>
+                x: {selected.x.toFixed(6)}, y: {selected.y.toFixed(6)}
+              </p>
               <p>koszt: {selected.cost ?? "unknown"}</p>
               <p>Pojemność: {selected.capacity ?? "unknown"}</p>
-              <p>przypisane obiekty: {
-                data?.points.filter(p => p.type === "apartment" && p.assigned_to === selected.id).length
-              }</p>
+              <p>
+                przypisane obiekty:{" "}
+                {localData?.points.filter(
+                  (p) => p.type === "apartment" && p.assigned_to === selected.id,
+                ).length}
+              </p>
             </div>
           )}
-          <div className="flex gap-2 mt-3">
+          <div className="flex gap-2 mt-3 flex-wrap">
             <button
               className="bg-primary text-white px-3 py-1 rounded"
               onClick={() => {
@@ -441,8 +560,41 @@ function Map({ data }: MapProps) {
               className="bg-red-600 text-white px-3 py-1 rounded"
               onClick={handleDelete}
             >
-              Usuń
+              Usuń obiekt
             </button>
+
+            {selected.type === "potential_shelter" && (
+              <button
+                className="bg-primary text-white px-3 py-1 rounded"
+                onClick={handleActivateShelter}
+              >
+                Aktywuj
+              </button>
+            )}
+
+            {selected.type === "apartment" && selected.assigned_to === null && (
+              <button
+                className="bg-primary text-white px-3 py-1 rounded"
+                onClick={() => {
+                  setAssigningApartmentId(selected.id);
+                  setSelected(null); 
+                  setSuccessMessage(
+                    "Wybierz schron, do którego chcesz przypisać obiekt.",
+                  );
+                }}
+              >
+                Przypisz do schronu
+              </button>
+            )}
+
+            {selected.type === "apartment" && selected.assigned_to !== null && (
+              <button
+                className="bg-red-600 text-black px-3 py-1 rounded"
+                onClick={handleUnassignApartment}
+              >
+                Usuń przypisanie
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -473,7 +625,9 @@ function Map({ data }: MapProps) {
 
               {selected.type !== "apartment" && (
                 <>
-                  <label className="font-semibold text-right col-span-1">Capacity:</label>
+                  <label className="font-semibold text-right col-span-1">
+                    Pojemność:
+                  </label>
                   <input
                     type="number"
                     value={editCapacity ?? selected.capacity}
@@ -481,7 +635,9 @@ function Map({ data }: MapProps) {
                     className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
                   />
 
-                  <label className="font-semibold text-right col-span-1">Cost:</label>
+                  <label className="font-semibold text-right col-span-1">
+                    Koszt:
+                  </label>
                   <input
                     type="number"
                     value={editCost ?? selected.cost ?? 0}
