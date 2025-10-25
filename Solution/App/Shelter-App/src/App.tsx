@@ -189,7 +189,7 @@ function App() {
                   onChange={(e) => setForm({ ...form, model: e.target.value })}
                 >
                   <option value="">Wybierz model</option>
-                  <option value="GNN">GNN</option>
+                  <option value="QUBO">QUBO</option>
                   <option value="GUROBI">GUROBI</option>
                 </select>
 

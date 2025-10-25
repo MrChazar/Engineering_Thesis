@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from Solution.App.backend.models import gnn_model as gnn, gurobi_model as gurobi, shelter_service as ss
+from Solution.App.backend.models import qubo_model as qubo, gurobi_model as gurobi, shelter_service as ss
 from pydantic import BaseModel
 import middleware as mid
 from fastapi import HTTPException, status
@@ -25,8 +25,8 @@ def get_shelter_allocations(body: Allocation_Request):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     result = None
-    if body.model == "GNN":
-        result = gnn.get_shelter_allocation(body.budget, body.allowedDistance, body.averagePersonPerBuilding)
+    if body.model == "QUBO":
+        result = qubo.get_shelter_allocation(body.budget, body.allowedDistance, body.averagePersonPerBuilding)
     elif body.model == "GUROBI":
         result = gurobi.get_shelter_allocation(body.budget, body.allowedDistance, body.averagePersonPerBuilding)
     return result
