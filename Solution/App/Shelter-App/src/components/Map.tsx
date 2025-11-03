@@ -589,7 +589,7 @@ function Map({ data }: MapProps) {
 
             {selected.type === "apartment" && selected.assigned_to !== null && (
               <button
-                className="bg-red-600 text-black px-3 py-1 rounded"
+                className="bg-red-600 text-white px-3 py-1 rounded"
                 onClick={handleUnassignApartment}
               >
                 Usuń przypisanie

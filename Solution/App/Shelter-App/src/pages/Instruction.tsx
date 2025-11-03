@@ -12,36 +12,28 @@ function Instruction() {
                 <h1 className="text-4xl font-bold text-gray-900">
                     Instrukcja obsługi aplikacji ShelterApp
                 </h1>
-                <p className="text-lg text-gray-700 leading-relaxed">
-                    ShelterApp to narzędzie służące do planowania i optymalizacji rozmieszczenia
-                    schronów na podstawie danych przestrzennych. Dzięki interaktywnej mapie i
-                    modelowi optymalizacyjnemu możesz analizować istniejące schrony, planować nowe
-                    lokalizacje oraz sprawdzać efektywność inwestycji.
-                </p>
-
                 <h2 className="text-2xl font-semibold text-gray-900 mt-6">
-                    🔹 Struktura aplikacji
+                    Instrukcja będzie tłumaczyć jak korzystać ze strony model zawierający całą funkcjonalność aplikacji.
                 </h2>
                 <ul className="list-disc list-inside text-gray-700 space-y-2">
-                    <li><b>Mapa</b> – główny widok aplikacji z rozmieszczeniem punktów danych.</li>
-                    <li><b>Panel Parametrów</b> – umożliwia uruchomienie algorytmu lokalizacji schronów.</li>
+                    <li><b>Wizualizacja</b> – pozwala na wizualizację oraz modyfikację punktów na mapie.</li>
+                    <li><b>Parametry Procesu</b> – umożliwia uruchomienie algorytmu lokalizacji schronów.</li>
                     <li><b>Statystyki</b> – prezentuje wyniki obliczeń i wykorzystanie zasobów.</li>
-                    <li><b>Instrukcja</b> – bieżąca strona z opisem działania aplikacji.</li>
                 </ul>
 
                 <h2 className="text-2xl font-semibold text-gray-900 mt-6">
-                    Panel Parametrów
+                    Parametry Procesu
                 </h2>
                 <p className="text-gray-700 leading-relaxed">
-                    W panelu parametrów użytkownik definiuje parametry problemu. Po ich
-                    ustawieniu i kliknięciu przycisku <b>"Rozpocznij optymalizację"</b> aplikacja
-                    wyśle dane do backendu, gdzie zostanie rozwiązany problem typu
-                    <b> Capacitated Facility Location Problem (CFLP)</b>.
+                    W formularzu parametrów procesu użytkownik definiuje parametry problemu. Po ich
+                    ustawieniu i kliknięciu przycisku <b>"Generuj"</b> aplikacja rozwiąże problem i wyświetli w sekcji wizualizacja oraz statystyki 
+                    informacje.
                 </p>
 
                 <ul className="list-disc list-inside text-gray-700 space-y-2">
-                    <li><b>Budżet</b> – maksymalna kwota, jaką można przeznaczyć na budowę nowych schronów.</li>
-                    <li><b>Średnia liczba osób na budynek</b> – używana do szacowania zapotrzebowania.</li>
+                    <li><b>Budżet (mln)</b> – maksymalna kwota, jaką można przeznaczyć na budowę nowych schronów.</li>
+                    <li><b>Maksymalna odległość (km)</b> – maksymalna odległość z której będzie mógł zostać przypisany obiekt mieszkalny.</li>
+                    <li><b>Średnia liczba osób na budynek (os)</b> – używana do szacowania zapotrzebowania.</li>
                 </ul>
 
                 <p className="text-gray-700 leading-relaxed mt-2">
@@ -50,7 +42,7 @@ function Instruction() {
                 </p>
 
                 <h2 className="text-2xl font-semibold text-gray-900 mt-6">
-                    Mapa interaktywna
+                    Wizualizacja
                 </h2>
                 <ul className="list-disc list-inside text-gray-700 space-y-2">
                     <li><b>Budynki mieszkalne</b> – źródła zapotrzebowania (domy, bloki).</li>
@@ -74,7 +66,7 @@ function Instruction() {
                 </ul>
 
                 <h2 className="text-2xl font-semibold text-gray-900 mt-6">
-                    Analiza wyników
+                    Statystyki
                 </h2>
                 <p className="text-gray-700 leading-relaxed">
                     Po zakończeniu optymalizacji wyświetlone zostaną kluczowe statystyki:

@@ -221,7 +221,7 @@ function App() {
                         onClick={handleLoadClick}
                         className="px-6 py-3 bg-black text-primary rounded-full font-bold hover:bg-gray-800 transition"
                       >
-                        📂 Wczytaj konfigurację
+                        Wczytaj konfigurację
                       </button>
                       <input
                         type="file"

@@ -59,17 +59,17 @@ function Home() {
           </h2>
 
           <ul className="list-disc m-1 list-inside text-gray-700 space-y-2">
-            <li>🗺️ Interaktywną mapę do wizualizacji schronów i budynków</li>
-            <li>⚙️ Model optymalizacyjny dobierający lokalizacje schronów</li>
-            <li>➕ Możliwość dodawania i edytowania punktów danych</li>
-            <li>📊 Podgląd wyników i użytego budżetu</li>
+            <li>Interaktywną mapę do wizualizacji schronów i budynków</li>
+            <li>Model optymalizacyjny dobierający lokalizacje schronów</li>
+            <li>Możliwość dodawania i edytowania punktów danych</li>
+            <li>Podgląd wyników i użytego budżetu</li>
           </ul>
           { !isLogged ?  
           <button
             onClick={() => navigate("/register")}
             className="mt-8 m-2 bg-black text-white px-6 py-3 rounded-xl text-lg font-semibold hover:bg-gray-800 transition"
           >
-            Zarejestruj się i zacznij już teraz →
+            Zarejestruj
           </button> : <></>
         }
          

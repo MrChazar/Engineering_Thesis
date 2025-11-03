@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from Solution.App.backend.models import gnn_model as gnn, gurobi_model as gurobi, shelter_service as ss
+from Solution.App.backend.models import qubo_model_dwave as qubo, gurobi_model as gurobi, shelter_service as ss
 from pydantic import BaseModel
 import middleware as mid
 from fastapi import HTTPException, status

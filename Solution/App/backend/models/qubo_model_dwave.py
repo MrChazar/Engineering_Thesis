@@ -48,14 +48,9 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
     h = len(residential_buildings)  # Liczba budynków mieszkalnych
 
     p = budget  # Budżet
-    K = 100.0  # Kara za nieprzypisanie (używamy float dla QUBO)
+    K = 100.0
 
     M = [[row["x"], row["y"]] for row in residential_buildings]
-
-    # Macierz odległości
-    if len(L) == 0 or len(M) == 0:
-        return {"status": "no_data", "message": "brak schronów lub budynków mieszkalnych w bazie"}
-
     r = np.array([[geodesic(l, m).kilometers for m in M] for l in L])
 
     # Koszty i pojemności
@@ -63,7 +58,6 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
     v = [int(row["capacity"] / averagePersonPerBuilding) for row in new_shelters] + \
         [int(row["capacity"] / averagePersonPerBuilding) for row in existing_shelters]
 
-    # Przechowujemy oryginalne pojemności dla formatowania wyjścia
     capacity_original = [row["capacity"] for row in new_shelters] + [row["capacity"] for row in existing_shelters]
 
     x_vars = {}
@@ -86,7 +80,6 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
 
     print(f"Info: Zredukowano liczbę zmiennych 'x' z {h * (s + e)} do {len(valid_pairs)} przez filtr odległości.")
 
-    # budowa słownika bqm
     linear = defaultdict(float)
     quadratic = defaultdict(float)
     offset = 0.0
@@ -94,10 +87,11 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
     max_cost = max(c) if s > 0 else 0
     max_dist_cost = np.max(r[r <= allowedDistance]) * h if len(valid_pairs) > 0 else 0
 
-    P_LARGE = (max_cost + K + max_dist_cost) * 10.0 + 1000.0
+    P_LARGE = (max_cost + K + max_dist_cost) * 10000.0 + 1000.0
+    if P_LARGE <= 0:
+        P_LARGE = 1e4
 
     print(f"Info: Używam współczynnika kary P_LARGE = {P_LARGE}")
-
 
     # Minimalizacja odległości (r_in * x_in)
     for i, n in valid_pairs:
@@ -111,99 +105,166 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
     for n in range(h):
         linear[z_vars[n]] += float(K)
 
-    print("Info: Funkcja celu przygotowana.")
+    # Wymuszenie x_{in} <= y_i jako silna kara: P*(x - x*y) = P*x - P*x*y
+    # Dodajemy to tylko dla i < s (nowe schrony mają y). Dla istniejących y=1 (nie ma zmiennej).
+    for (i, n) in valid_pairs:
+        if i < s:
+            xname = x_vars[(i, n)]
+            yname = y_vars[i]
+            linear[xname] += P_LARGE  # +P*x
+            # interakcja -P * x*y  (kwadratowy współczynnik)
+            quadratic_key = tuple(sorted((xname, yname)))
+            quadratic[quadratic_key] += -P_LARGE
 
-    # Stwórz BQM
-    bqm = dimod.BinaryQuadraticModel(dict(linear), dict(quadratic), offset, dimod.BINARY)
+    print("Info: Dodano karę wymuszającą x_in <= y_i.")
+
+    # Tworzymy BQM z linear/quad
+    # dimod expects quadratic dict keys as (u,v) where u != v
+    bqm = dimod.BinaryQuadraticModel(dict(linear), {k: v for k, v in quadratic.items()}, offset, dimod.BINARY)
 
     # Ograniczenie (1): Każdy budynek 'n' musi być przypisany do 'i' LUB oznaczony jako 'z_n'
     for n in range(h):
         constraint_vars = [x_vars[(i, n)] for i in valid_i_for_n[n]] + [z_vars[n]]
         if not constraint_vars:
-            # jeśli dla n nie ma żadnego i w zasięgu to zmienna z_n musi być 1
             linear[z_vars[n]] += P_LARGE
-            bqm = dimod.BinaryQuadraticModel(dict(linear), dict(quadratic), offset, dimod.BINARY)
+            bqm = dimod.BinaryQuadraticModel(dict(linear), {k: v for k, v in quadratic.items()}, offset, dimod.BINARY)
             continue
 
-        bqm.add_linear_equality_constraint(
-            terms=[(var, 1) for var in constraint_vars],
-            constant=-1,
-            lagrange_multiplier=P_LARGE
-        )
-    print("Info: Ograniczenie (1) [Przypisanie] dodane do BQM.")
+        # dodajemy karę kwadratową ręcznie: P*(sum(vars) - 1)^2
+        # Rozwiń (sum vars -1)^2 = sum_i sum_j var_i var_j - 2 sum_i var_i + 1
+        vars_list = constraint_vars
+        # pary
+        for i1 in range(len(vars_list)):
+            v1 = vars_list[i1]
+            linear[v1] += P_LARGE * (-2.0)  # -2P * v1 part
+            for i2 in range(i1, len(vars_list)):
+                v2 = vars_list[i2]
+                pair = tuple(sorted((v1, v2)))
+                quadratic[pair] += P_LARGE * (1.0)  # P * v1*v2
+        offset += P_LARGE * 1.0  # +P*1
+
+    # zaktualizuj bqm po dodaniu constraintów
+    bqm = dimod.BinaryQuadraticModel(dict(linear), {k: v for k, v in quadratic.items()}, offset, dimod.BINARY)
+    print("Info: Ograniczenie (1) [Przypisanie] dodane do BQM (jawnie).")
 
     # Ograniczenie (2) i (4): Pojemność i zależność budowy
     for i in range(s + e):
-        terms_x = [(x_vars[(i, n)], 1) for n in valid_n_for_i[i]]
-        if not terms_x:
+        terms = valid_n_for_i[i]
+        if not terms:
             continue
 
+        # sum_n x_in - v_i*y_i
+        vars_list = []
+        coeffs = []
+        for n in terms:
+            vars_list.append(x_vars[(i, n)])
+            coeffs.append(1.0)
         if i < s:
-            all_terms = terms_x + [(y_vars[i], -v[i])]
-            bqm.add_linear_inequality_constraint(
-                terms=all_terms,
-                constant=0,
-                ub=0,  # upper bound: <= 0
-                lagrange_multiplier=P_LARGE,
-                label=f'capacity_new_{i}'
-            )
+            vars_list.append(y_vars[i])
+            coeffs.append(-float(v[i]))
         else:
-            bqm.add_linear_inequality_constraint(
-                terms=terms_x,
-                constant=-v[i],  # sum(...) + constant <= ub
-                ub=0,
-                lagrange_multiplier=P_LARGE,
-                label=f'capacity_existing_{i}'
-            )
-    print("Info: Ograniczenie (2) i (4) [Pojemność i Zależność] dodane do BQM.")
+            offset += 0.0
 
-    # Ograniczenie (3): Budżet
-    budget_terms = [(y_vars[i], c[i]) for i in range(s) if c[i] > 0]
+        for a in range(len(vars_list)):
+            va = vars_list[a]
+            ca = coeffs[a]
+            linear[va] += P_LARGE * (ca * ca) * 0.0  # placeholder by ensure key exists
+            for b in range(a, len(vars_list)):
+                vb = vars_list[b]
+                cb = coeffs[b]
+                pair = tuple(sorted((va, vb)))
+                quadratic[pair] += P_LARGE * (ca * cb)
 
-    if budget_terms:
-        bqm.add_linear_inequality_constraint(
-            terms=budget_terms,
-            constant=-p,
-            ub=0,
-            lagrange_multiplier=P_LARGE,
-            label='budget'
-        )
-        print("Info: Ograniczenie (3) [Budżet] dodane do BQM.")
+        # dodać stałą term: (-v_i)^2 * P jeśli jest i < s? but constant doesn't affect feasibility
+    # zaktualizuj bqm po pojemnościach
+    bqm = dimod.BinaryQuadraticModel(dict(linear), {k: v for k, v in quadratic.items()}, offset, dimod.BINARY)
+    print("Info: Ograniczenia pojemności dodane (kwadratowo).")
+
+    # Ograniczenie (3): Budżet: P*(sum c_i*y_i - p)^2
+    budget_vars = [y_vars[i] for i in range(s) if c[i] > 0]
+    if budget_vars:
+        # rozwinięcie kwadratu
+        for a in range(len(budget_vars)):
+            va = budget_vars[a]
+            ca = c[[i for i in range(s) if c[i] > 0][a]]
+            linear[va] += P_LARGE * (ca * ca) * 0.0
+            for b in range(a, len(budget_vars)):
+                vb = budget_vars[b]
+                cb = c[[i for i in range(s) if c[i] > 0][b]]
+                pair = tuple(sorted((va, vb)))
+                quadratic[pair] += P_LARGE * (ca * cb)
+        # offset term P * p^2 (irrelevant for decision)
+        offset += P_LARGE * (p * p)
+
+        bqm = dimod.BinaryQuadraticModel(dict(linear), {k: v for k, v in quadratic.items()}, offset, dimod.BINARY)
+        print("Info: Ograniczenie budżetowe (kwadratowo) dodane do BQM.")
     else:
         print("Info: Brak nowych schronów z kosztem, pomijam ograniczenie budżetowe.")
-
 
     print(f"\nInfo: Model BQM zbudowany. Liczba zmiennych: {len(bqm.variables)}")
     print("Info: Rozpoczynam wyżarzanie (NEAL)...")
 
     sampler = neal.SimulatedAnnealingSampler()
-    sampleset = sampler.sample(bqm, num_reads=10, num_sweeps=5000)
+    sampleset = sampler.sample(bqm, num_reads=200, num_sweeps=2000)
 
     print(f"Info: Wyżarzanie zakończone. Całkowity czas: {time.time() - start:.2f}s")
 
-    # Filtracja wykonalnych rozwiązań (jeśli metadata is_feasible jest dostępna)
-    try:
-        feasible_sampleset = sampleset.filter(lambda d: d.is_feasible)
-    except Exception:
-        # w razie gdy filter/metadane nie są dostępne, przyjmijemy wszystkie próbki
-        feasible_sampleset = sampleset
 
-    if len(feasible_sampleset) == 0:
-        print("BŁĄD: Neal nie znalazł żadnego wykonalnego rozwiązania (spełniającego ograniczenia).")
-        print("Możliwe przyczyny: Zbyt małe 'num_reads/num_sweeps', zbyt duży problem, lub sprzeczne ograniczenia.")
+    def is_sample_feasible(sample_dict):
+        # constraint (1): sum_i x_in + z_n == 1
+        for n in range(h):
+            ssum = 0
+            for i in valid_i_for_n[n]:
+                var = x_vars[(i, n)]
+                ssum += int(sample_dict.get(var, 0))
+            ssum += int(sample_dict.get(z_vars[n], 0))
+            if ssum != 1:
+                return False
+        # constraint (2) & (4): capacity sum_n x_in <= v_i*y_i  (for existing y_i=1)
+        for i in range(s + e):
+            ssum = 0
+            for n in valid_n_for_i[i]:
+                ssum += int(sample_dict.get(x_vars[(i, n)], 0))
+            if i < s:
+                yi = int(sample_dict.get(y_vars[i], 0))
+                if ssum > v[i] * yi:
+                    return False
+            else:
+                if ssum > v[i]:
+                    return False
+        # constraint (3): budget
+        total_cost = 0.0
+        for i in range(s):
+            total_cost += float(c[i]) * int(sample_dict.get(y_vars[i], 0))
+        if total_cost > p + 1e-9:
+            return False
+        return True
+
+    # iterate samples and pick best feasible (lowest energy)
+    best_feasible = None
+    best_feasible_energy = None
+
+    for row in sampleset.data(['sample', 'energy']):
+        sample = row.sample
+        energy = row.energy
+        if is_sample_feasible(sample):
+            if best_feasible is None or energy < best_feasible_energy:
+                best_feasible = sample
+                best_feasible_energy = energy
+
+    if best_feasible is None:
+        print("BŁĄD: Nie znaleziono wykonalnej próbki w wygenerowanych próbkach.")
+        # zwróć najlepszą dostępną niefekasblę próbkę (jak wcześniej)
         best_sample = sampleset.first.sample
-        print(f"Info: Najlepsza znaleziona energia (niewykonalna): {sampleset.first.energy}")
         return {"status": "no_feasible_solution_found_by_neal", "time": int((time.time() - start))}
 
-    best_sample = feasible_sampleset.first.sample
-    best_energy = feasible_sampleset.first.energy
+    best_sample = best_feasible
+    best_energy = best_feasible_energy
 
-    print(f"Info: Znaleziono wykonalne rozwiązanie! Najniższa energia: {best_energy}")
+    print(f"Info: Wybrano najlepsze wykonalne rozwiązanie o energii: {best_energy}")
     print("Info: Formatowanie wyjścia zgodnie z wymaganym formatem...")
 
-    # ----------------------------------------------------------------------
-    # Formatowanie wyjścia
-    # ----------------------------------------------------------------------
+    # formatowanie
     points = []
     total_population = h * averagePersonPerBuilding
     assigned_buildings = 0
