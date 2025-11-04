@@ -28,7 +28,7 @@ function Map({ data }: MapProps) {
     setLocalData(data);
   }, [data]);
 
-  // for data storage
+  // variables
   const [selected, setSelected] = useState<AllocationPoint | null>(null);
   const [coordinate, setCoordinate] = useState<number[] | null>(null);
   const [addPanel, setAddPanel] = useState<boolean>(false);
@@ -47,8 +47,19 @@ function Map({ data }: MapProps) {
 
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [assigningApartmentId, setAssigningApartmentId] = useState<number | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // for adding points by clicking q
+  const toggleFullscreen = () => {
+    const mapContainer = document.getElementById("map-container");
+    if (!document.fullscreenElement) {
+      mapContainer?.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key.toLowerCase() === "q") {
@@ -58,11 +69,23 @@ function Map({ data }: MapProps) {
       }
     };
 
+    const handleFullscreenChange = () => {
+      const isFs = Boolean(document.fullscreenElement);
+      setIsFullscreen(isFs);
+    };
+
     window.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+
+    setIsFullscreen(Boolean(document.fullscreenElement));
+
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
     };
   }, []);
+
+ 
 
   const handleActivateShelter = () => {
     if (!selected || selected.type !== "potential_shelter") return;
@@ -354,8 +377,6 @@ function Map({ data }: MapProps) {
 
   const handleDelete = async () => {
     if (!selected) return;
-    const confirmed = confirm("Czy na pewno chcesz usunąć ten punkt?");
-    if (!confirmed) return;
 
     try {
       if (selected.type === "apartment") {
@@ -377,7 +398,7 @@ function Map({ data }: MapProps) {
   };
 
   return (
-    <div className="relative w-full h-full">
+    <div id="map-container" className="relative w-full h-full">
       <DeckGL
         initialViewState={INITIAL_VIEW_STATE}
         controller={true}
@@ -400,6 +421,14 @@ function Map({ data }: MapProps) {
           }
         }}
       />
+      <div className="absolute top-4 left-4 z-50">
+        <button
+          onClick={toggleFullscreen}
+          className="bg-white text-black px-3 py-2 rounded shadow hover:bg-gray-200 transition"
+        >
+          {isFullscreen ? "Wyjdź z pełnego ekranu" : "Pełny ekran"}
+        </button>
+      </div>
 
       {coordinate && (
         <div className="absolute bottom-4 right-4 bg-white shadow-lg p-4 rounded text-sm max-w-xs">
@@ -430,8 +459,8 @@ function Map({ data }: MapProps) {
                 }
                 className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
               >
-                <option value="shelter">Shelter</option>
-                <option value="apartment">Apartment</option>
+                <option value="shelter">Obiekt ochronny</option>
+                <option value="apartment">Obiekt mieszkalny</option>
               </select>
 
               <label className="font-semibold text-right col-span-1">X:</label>

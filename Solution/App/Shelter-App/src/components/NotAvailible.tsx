@@ -9,30 +9,35 @@ interface ProtectedNotAvailibleProps {
 const NotAvailible: React.FC<ProtectedNotAvailibleProps> = ({ children }) => {
 
   const [isLogged, setIsLogged] = useState<boolean>(true);
-  useEffect(() => {
-      const verifyUser = async () => {
-        debugger
-        const token = sessionStorage.getItem("token");
   
-        if (token) {
-          try {
-            const response = await apiService.verify(token);
-            if (response.valid) {
-              setIsLogged(true);
-            } else {
-              setIsLogged(false);
-            }
-          } catch (err) {
-            console.error("Błąd weryfikacji:", err);
-            setIsLogged(false);
-          }
-        } else {
+  useEffect(() => {
+    const verifyUser = async () => {
+      let token = sessionStorage.getItem("token");
+      const refreshToken = sessionStorage.getItem("refresh_token");
+
+      if (!token && refreshToken) {
+        try {
+          const newToken = await apiService.refresh(refreshToken);
+          sessionStorage.setItem("token", newToken.access_token);
+          token = newToken.access_token;
+        } catch (err) {
+          console.error("Błąd odświeżania:", err);
+        }
+      }
+
+      if (token) {
+        try {
+          const response = await apiService.verify(token);
+          setIsLogged(response.valid);
+        } catch {
           setIsLogged(false);
         }
-      };
-  
+      } else {
+        setIsLogged(false);
+      }
+    };
       verifyUser();
-    }, []);
+  }, []);
 
   if (!isLogged) {
     return (

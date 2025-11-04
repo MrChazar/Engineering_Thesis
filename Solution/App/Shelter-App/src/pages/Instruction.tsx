@@ -13,12 +13,13 @@ function Instruction() {
                     Instrukcja obsługi aplikacji ShelterApp
                 </h1>
                 <h2 className="text-2xl font-semibold text-gray-900 mt-6">
-                    Instrukcja będzie tłumaczyć jak korzystać ze strony model zawierający całą funkcjonalność aplikacji.
+                    Instrukcja będzie tłumaczyć jak korzystać ze strony model który zawiera całą funkcjonalność aplikacji.
                 </h2>
+                <h3 className="text-gray-900" >Strona model zawiera trzy główne komponenty:</h3>
                 <ul className="list-disc list-inside text-gray-700 space-y-2">
                     <li><b>Wizualizacja</b> – pozwala na wizualizację oraz modyfikację punktów na mapie.</li>
-                    <li><b>Parametry Procesu</b> – umożliwia uruchomienie algorytmu lokalizacji schronów.</li>
-                    <li><b>Statystyki</b> – prezentuje wyniki obliczeń i wykorzystanie zasobów.</li>
+                    <li><b>Parametry Procesu</b> – umożliwia wpisanie parametrów procesu oraz uruchomienie algorytmu lokalizacji schronów.</li>
+                    <li><b>Statystyki</b> – prezentuje wyniki obliczeń oraz statystyki problemu.</li>
                 </ul>
 
                 <h2 className="text-2xl font-semibold text-gray-900 mt-6">
@@ -44,6 +45,10 @@ function Instruction() {
                 <h2 className="text-2xl font-semibold text-gray-900 mt-6">
                     Wizualizacja
                 </h2>
+                <p className="text-gray-900">Komponent ten zawiera następujące funkcjonalności:</p>
+                <h4 className="font-semibold text-gray-900">
+                    Mapa
+                </h4>
                 <ul className="list-disc list-inside text-gray-700 space-y-2">
                     <li><b>Budynki mieszkalne</b> – źródła zapotrzebowania (domy, bloki).</li>
                     <li><b>Istniejące schrony</b> – punkty już obecne w bazie.</li>
@@ -55,9 +60,19 @@ function Instruction() {
                     Dane aktualizują się po każdej optymalizacji lub edycji punktu.
                 </p>
 
-                <h2 className="text-2xl font-semibold text-gray-900 mt-6">
+                <h4 className="font-semibold text-gray-900 mt-6">
                     Dodawanie nowych punktów
-                </h2>
+                </h4>
+                <ul className="list-disc list-inside text-gray-700 space-y-2">
+                    <li>Kliknij przycisk <b>„Dodaj punkt”</b> na mapie.</li>
+                    <li>Wybierz typ: <b>budynek</b> lub <b>schron</b>.</li>
+                    <li>Wprowadź współrzędne, pojemność, koszt (jeśli dotyczy).</li>
+                    <li>Zatwierdź — punkt zostanie zapisany w bazie danych i pojawi się na mapie.</li>
+                </ul>
+
+                <h4 className="font-semibold text-gray-900 mt-6">
+                    Edycja istniejących punktów
+                </h4>
                 <ul className="list-disc list-inside text-gray-700 space-y-2">
                     <li>Kliknij przycisk <b>„Dodaj punkt”</b> na mapie.</li>
                     <li>Wybierz typ: <b>budynek</b> lub <b>schron</b>.</li>

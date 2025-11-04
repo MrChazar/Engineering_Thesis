@@ -188,6 +188,20 @@ export const apiService = {
     }
 
     return response.json();
+  },
+
+  async refresh(refreshToken: string): Promise<{ access_token: string }> {
+    const response = await fetch("http://localhost:8000/users/refresh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Błąd odświeżania tokena");
+    }
+
+    return response.json();
   }
 
 };
