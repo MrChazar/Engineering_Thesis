@@ -1,17 +1,26 @@
 import math
 import numpy as np
 import pandas as pd
-from geopy.distance import geodesic
-from gurobipy import Model, GRB, quicksum
 import sqlite3
-import math
-import numpy as np
-import pandas as pd
-from geopy.distance import geodesic
-from gurobipy import Model, GRB, quicksum
 import time
+import cupy as cp
+from gurobipy import Model, GRB, quicksum
 
 DB_PATH = r"C:\Users\jakub\Documents\GitHub\Engineering_Thesis\Solution\App\backend\models\data\database.db"
+
+def haversine_gpu(lats1, lons1, lats2, lons2):
+    R = 6371.0  # km
+    lat1 = cp.radians(lats1)[:, None]
+    lon1 = cp.radians(lons1)[:, None]
+    lat2 = cp.radians(lats2)[None, :]
+    lon2 = cp.radians(lons2)[None, :]
+
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = cp.sin(dlat/2)**2 + cp.cos(lat1) * cp.cos(lat2) * cp.sin(dlon/2)**2
+    c = 2 * cp.arcsin(cp.sqrt(a))
+    return R * c
+
 
 def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonPerBuilding: int):
     start = time.time()
@@ -34,9 +43,9 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
     ids_new = [row["id"] for row in new_shelters]
     ids_res = [row["id"] for row in residential_buildings]
 
-    L_existing = [[row["x"], row["y"]] for row in existing_shelters]
-    L_new = [[row["x"], row["y"]] for row in new_shelters]
-    L = L_new + L_existing
+    L_existing = np.array([[row["x"], row["y"]] for row in existing_shelters])
+    L_new = np.array([[row["x"], row["y"]] for row in new_shelters])
+    L = np.vstack([L_new, L_existing])
 
     s = len(L_new)
     e = len(L_existing)
@@ -44,20 +53,23 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
     p = budget
     K = 100
 
-    M = [[row["x"], row["y"]] for row in residential_buildings]
+    M = np.array([[row["x"], row["y"]] for row in residential_buildings])
 
-    r = np.array([[geodesic(l, m).kilometers for m in M] for l in L])
+    r_gpu = haversine_gpu(
+        cp.array(L[:, 0]), cp.array(L[:, 1]),
+        cp.array(M[:, 0]), cp.array(M[:, 1])
+    )
+    r = cp.asnumpy(r_gpu)  # konwersja z GPU → CPU (dla Gurobi)
 
-    # Koszty i pojemności
     c = [row["cost"] for row in new_shelters] + [0] * e
     v = [int(row["capacity"] / averagePersonPerBuilding) for row in new_shelters] + \
         [int(row["capacity"] / averagePersonPerBuilding) for row in existing_shelters]
-
     capacity = [row["capacity"] for row in new_shelters] + [row["capacity"] for row in existing_shelters]
     model = Model("shelter_location")
+    model.setParam("Threads", 16)        # maksymalna liczba wątków
+    model.setParam("ConcurrentMIP", 1)   # równoległy MIP
 
     x, y, z = {}, {}, {}
-
     for i in range(s + e):
         y[i] = model.addVar(vtype=GRB.BINARY, name=f"y_{i}")
     for n in range(h):
@@ -74,7 +86,6 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
             + quicksum(c[i] * y[i] for i in range(s + e))
             + quicksum(K * z[n] for n in range(h))
     )
-
     model.setObjective(obj, GRB.MINIMIZE)
 
     # ograniczenia – każdy obiekt przypisany dokładnie do 1 schronu
@@ -178,5 +189,5 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
             "time": int((time.time() - start) / 60),
             "stats": stats
         }
-    else:
-        return {"status": "no_optimal_solution"}
+
+    return {"status": "no_optimal_solution"}

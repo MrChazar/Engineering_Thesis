@@ -44,12 +44,12 @@ function Home() {
       <main className="flex flex-1 flex-col lg:flex-row items-center  justify-between gap-8 p-10">
         <section className="flex-1 flex flex-col gap-6 bg-primary rounded-xl ">
           <h1 className="text-4xl m-1 font-bold text-gray-900">
-            ShelterApp — Inteligentna alokacja schronów
+            ShelterApp — Alokacja schronów
           </h1>
 
           <p className="text-gray-700 m-1 text-lg leading-relaxed">
             ShelterApp to aplikacja wspomagająca planowanie i optymalizację
-            rozmieszczenia schronów na terenie miasta. Wykorzystuje modele
+            rozmieszczenia schronów na terenie miasta Wrocław. Wykorzystuje modele
             matematyczne i wizualizację danych, aby pomóc w podejmowaniu
             decyzji opartych na rzeczywistych danych przestrzennych.
           </p>
@@ -59,7 +59,7 @@ function Home() {
           </h2>
 
           <ul className="list-disc m-1 list-inside text-gray-700 space-y-2">
-            <li>Interaktywną mapę do wizualizacji schronów i budynków</li>
+            <li>Interaktywną mapę do wizualizacji schronów i budynków mieszkalnych</li>
             <li>Model optymalizacyjny dobierający lokalizacje schronów</li>
             <li>Możliwość dodawania i edytowania punktów danych</li>
             <li>Podgląd wyników i użytego budżetu</li>

@@ -48,6 +48,8 @@ function Map({ data }: MapProps) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [assigningApartmentId, setAssigningApartmentId] = useState<number | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showAllAssignments, setShowAllAssignments] = useState(false);
+
 
   const toggleFullscreen = () => {
     const mapContainer = document.getElementById("map-container");
@@ -160,45 +162,22 @@ function Map({ data }: MapProps) {
   const layers = useMemo(() => {
     if (!localData) return [];
 
-    const potentialShelters = localData.points.filter(
-      (p) => p.type === "potential_shelter",
-    );
-    const builtShelters = localData.points.filter(
-      (p) => p.type === "built_shelter",
-    );
-    const assigned_apartments = localData.points.filter(
-      (p) => p.type === "apartment" && p.assigned_to !== null,
-    );
-    const unassigned_apartments = localData.points.filter(
-      (p) => p.type === "apartment" && p.assigned_to === null,
-    );
-
-    const lines = assigned_apartments
-      .map((a) => {
-        const shelter = localData.points.find((p) => p.id === a.assigned_to);
-        return shelter
-          ? { source: [a.x, a.y], target: [shelter.x, shelter.y] }
-          : null;
-      })
-      .filter((l) => l !== null);
+    const potentialShelters = localData.points.filter(p => p.type === "potential_shelter");
+    const builtShelters = localData.points.filter(p => p.type === "built_shelter");
+    const assigned_apartments = localData.points.filter(p => p.type === "apartment" && p.assigned_to !== null);
+    const unassigned_apartments = localData.points.filter(p => p.type === "apartment" && p.assigned_to === null);
 
     const commonLayerProps = {
       pickable: true,
       onClick: (info: any) => {
         if (!info.object) return;
-
         const clickedPoint = info.object as AllocationPoint;
 
         if (assigningApartmentId !== null) {
-          if (
-            clickedPoint.type === "built_shelter" ||
-            clickedPoint.type === "potential_shelter"
-          ) {
+          if (clickedPoint.type === "built_shelter" || clickedPoint.type === "potential_shelter") {
             handleAssignApartment(assigningApartmentId, clickedPoint.id);
           } else {
-            alert(
-              "Wybierz schron (zielony lub czerwony), aby przypisać obiekt.",
-            );
+            alert("Wybierz schron (zielony lub czerwony), aby przypisać obiekt.");
             setAssigningApartmentId(null);
           }
         } else {
@@ -206,6 +185,28 @@ function Map({ data }: MapProps) {
         }
       },
     };
+
+    let lineData: { source: number[]; target: number[] }[] = [];
+
+    if (showAllAssignments) {
+      // wszystkie połączenia
+      lineData = assigned_apartments
+        .map(a => {
+          const shelter = localData.points.find(p => p.id === a.assigned_to);
+          return shelter ? { source: [a.x, a.y], target: [shelter.x, shelter.y] } : null;
+        })
+        .filter((l): l is { source: number[]; target: number[] } => l !== null);
+    } else if (selected) {
+      // tylko aktualnie wybrane
+      if (selected.type === "built_shelter" || selected.type === "potential_shelter") {
+        lineData = localData.points
+          .filter(p => p.type === "apartment" && p.assigned_to === selected.id)
+          .map(a => ({ source: [a.x, a.y], target: [selected.x, selected.y] }));
+      } else if (selected.type === "apartment" && selected.assigned_to) {
+        const shelter = localData.points.find(p => p.id === selected.assigned_to);
+        if (shelter) lineData = [{ source: [selected.x, selected.y], target: [shelter.x, shelter.y] }];
+      }
+    }
 
     return [
       new TileLayer({
@@ -215,10 +216,7 @@ function Map({ data }: MapProps) {
         maxZoom: 19,
         tileSize: 256,
         renderSubLayers: (props) => {
-          const {
-            bbox: { west, south, east, north },
-          } = props.tile;
-
+          const { bbox: { west, south, east, north } } = props.tile;
           return new BitmapLayer(props, {
             data: null,
             image: props.data,
@@ -227,52 +225,22 @@ function Map({ data }: MapProps) {
         },
       }),
 
-      new ScatterplotLayer<AllocationPoint>({
-        id: "potential-shelters",
-        data: potentialShelters,
-        getPosition: (d) => [d.x, d.y],
-        getFillColor: [255, 0, 0],
-        getRadius: 15,
-        ...commonLayerProps,
-      }),
-
-      new ScatterplotLayer<AllocationPoint>({
-        id: "built-shelters",
-        data: builtShelters,
-        getPosition: (d) => [d.x, d.y],
-        getFillColor: [0, 200, 0],
-        getRadius: 15,
-        ...commonLayerProps,
-      }),
-
-      new ScatterplotLayer<AllocationPoint>({
-        id: "unassigned-apartments",
-        data: unassigned_apartments,
-        getPosition: (d) => [d.x, d.y],
-        getFillColor: [0, 0, 0],
-        getRadius: 5,
-        ...commonLayerProps,
-      }),
-
-      new ScatterplotLayer<AllocationPoint>({
-        id: "assigned-apartments",
-        data: assigned_apartments,
-        getPosition: (d) => [d.x, d.y],
-        getFillColor: [230, 186, 11],
-        getRadius: 5,
-        ...commonLayerProps,
-      }),
+      new ScatterplotLayer({ id: "potential-shelters", data: potentialShelters, getPosition: (d) => [d.x, d.y], getFillColor: [255, 0, 0], getRadius: 15, ...commonLayerProps }),
+      new ScatterplotLayer({ id: "built-shelters", data: builtShelters, getPosition: (d) => [d.x, d.y], getFillColor: [0, 200, 0], getRadius: 15, ...commonLayerProps }),
+      new ScatterplotLayer({ id: "unassigned-apartments", data: unassigned_apartments, getPosition: (d) => [d.x, d.y], getFillColor: [0, 0, 0], getRadius: 5, ...commonLayerProps }),
+      new ScatterplotLayer({ id: "assigned-apartments", data: assigned_apartments, getPosition: (d) => [d.x, d.y], getFillColor: [230, 186, 11], getRadius: 5, ...commonLayerProps }),
 
       new LineLayer({
-        id: "apartment-to-shelter",
-        data: lines,
-        getSourcePosition: (d) => d!.source,
-        getTargetPosition: (d) => d!.target,
+        id: showAllAssignments ? "all-lines" : "visible-lines",
+        data: lineData,
+        getSourcePosition: (d) => d.source,
+        getTargetPosition: (d) => d.target,
         getColor: [0, 0, 0],
         getWidth: 1,
       }),
     ];
-  }, [localData, assigningApartmentId]);
+  }, [localData, selected, assigningApartmentId, showAllAssignments]);
+
 
   const generateLocalId = () =>
     Math.max(0, ...(localData?.points.map((p) => p.id) || [0])) + 1;
@@ -442,6 +410,12 @@ function Map({ data }: MapProps) {
             <p>X: {coordinate[0].toFixed(6)}</p>
             <p>Y: {coordinate[1].toFixed(6)}</p>
           </div>
+            <button
+            onClick={() => setShowAllAssignments(prev => !prev)}
+            className="bg-secondary text-white px-3 py-1 rounded w-full mt-2"
+          >
+            {showAllAssignments ? "Wybrane" : "Wszystkie"}
+          </button>
         </div>
       )}
 
@@ -484,7 +458,7 @@ function Map({ data }: MapProps) {
               {formType === "shelter" && (
                 <>
                   <label className="font-semibold text-right col-span-1">
-                    Pojemność:
+                    Pojemność(os):
                   </label>
                   <input
                     type="number"
@@ -494,7 +468,7 @@ function Map({ data }: MapProps) {
                   />
 
                   <label className="font-semibold text-right col-span-1">
-                    Koszt:
+                    Koszt(mln zł):
                   </label>
                   <input
                     type="number"
@@ -655,7 +629,7 @@ function Map({ data }: MapProps) {
               {selected.type !== "apartment" && (
                 <>
                   <label className="font-semibold text-right col-span-1">
-                    Pojemność:
+                    Pojemność(os):
                   </label>
                   <input
                     type="number"
@@ -665,7 +639,7 @@ function Map({ data }: MapProps) {
                   />
 
                   <label className="font-semibold text-right col-span-1">
-                    Koszt:
+                    Koszt(mln zł):
                   </label>
                   <input
                     type="number"
