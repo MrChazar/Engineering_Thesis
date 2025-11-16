@@ -407,12 +407,12 @@ function Map({ data }: MapProps) {
             Dodaj
           </button>
           <div className="text-black mt-2">
-            <p>X: {coordinate[0].toFixed(6)}</p>
-            <p>Y: {coordinate[1].toFixed(6)}</p>
+            <p>X: {coordinate[0].toFixed(4)}</p>
+            <p>Y: {coordinate[1].toFixed(4)}</p>
           </div>
             <button
             onClick={() => setShowAllAssignments(prev => !prev)}
-            className="bg-secondary text-white px-3 py-1 rounded w-full mt-2"
+            className="bg-primary text-white px-3 py-1 rounded w-full mt-2"
           >
             {showAllAssignments ? "Wybrane" : "Wszystkie"}
           </button>
@@ -440,18 +440,18 @@ function Map({ data }: MapProps) {
               <label className="font-semibold text-right col-span-1">X:</label>
               <input
                 type="number"
-                value={x ?? ""}
+                value={x?.toFixed(4) ?? ""}
                 onChange={(e) => setX(Number(e.target.value))}
-                step="0.000001"
+                step="0.0001"
                 className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
               />
 
               <label className="font-semibold text-right col-span-1">Y:</label>
               <input
                 type="number"
-                value={y ?? ""}
+                value={y?.toFixed(4) ?? ""}
                 onChange={(e) => setY(Number(e.target.value))}
-                step="0.000001"
+                step="0.0001"
                 className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
               />
 
@@ -515,18 +515,18 @@ function Map({ data }: MapProps) {
           {selected.type === "apartment" ? (
             <div className="text-black">
               <p>
-                <b>Apartment</b>
+                <b>Obiekt mieszkalny</b>
               </p>
               <p>id: {selected.id}</p>
               <p>
-                x: {selected.x.toFixed(6)}, y: {selected.y.toFixed(6)}
+                x: {selected.x.toFixed(4)}, y: {selected.y.toFixed(4)}
               </p>
-              <p>przypisany do: {selected.assigned_to ?? "none"}</p>
+              <p>przypisany do: {selected.assigned_to ?? "Nikogo"}</p>
             </div>
           ) : (
             <div className="text-black">
               <p>
-                <b>Shelter</b>
+                <b>Schron</b>
               </p>
               <p>
                 Typ:{" "}
@@ -534,7 +534,7 @@ function Map({ data }: MapProps) {
               </p>
               <p>id: {selected.id}</p>
               <p>
-                x: {selected.x.toFixed(6)}, y: {selected.y.toFixed(6)}
+                x: {selected.x.toFixed(4)}, y: {selected.y.toFixed(4)}
               </p>
               <p>koszt: {selected.cost ?? "unknown"}</p>
               <p>Pojemność: {selected.capacity ?? "unknown"}</p>
@@ -550,8 +550,8 @@ function Map({ data }: MapProps) {
             <button
               className="bg-primary text-white px-3 py-1 rounded"
               onClick={() => {
-                setEditX(selected.x);
-                setEditY(selected.y);
+                setEditX(Number(selected.x.toFixed(4)));
+                setEditY(Number(selected.y.toFixed(4)));
                 setEditCapacity(selected.capacity);
                 setEditCost(selected.cost ?? 0);
                 setEditPanel(true);
@@ -613,7 +613,7 @@ function Map({ data }: MapProps) {
                 type="number"
                 value={editX ?? selected.x}
                 onChange={(e) => setEditX(Number(e.target.value))}
-                step="0.000001"
+                step="0.0001"
                 className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
               />
 
@@ -622,7 +622,7 @@ function Map({ data }: MapProps) {
                 type="number"
                 value={editY ?? selected.y}
                 onChange={(e) => setEditY(Number(e.target.value))}
-                step="0.000001"
+                step="0.0001"
                 className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none col-span-2"
               />
 

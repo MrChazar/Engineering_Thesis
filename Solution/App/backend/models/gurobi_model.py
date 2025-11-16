@@ -1,6 +1,4 @@
-import math
 import numpy as np
-import pandas as pd
 import sqlite3
 import time
 import cupy as cp
@@ -52,21 +50,21 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
     h = len(residential_buildings)
     p = budget
     K = 100
-
+    w1, w2, w3 = 0.5, 0.1, 0.4
     M = np.array([[row["x"], row["y"]] for row in residential_buildings])
 
     r_gpu = haversine_gpu(
         cp.array(L[:, 0]), cp.array(L[:, 1]),
         cp.array(M[:, 0]), cp.array(M[:, 1])
     )
-    r = cp.asnumpy(r_gpu)  # konwersja z GPU → CPU (dla Gurobi)
+    r = cp.asnumpy(r_gpu)
 
     c = [row["cost"] for row in new_shelters] + [0] * e
     v = [int(row["capacity"] / averagePersonPerBuilding) for row in new_shelters] + \
         [int(row["capacity"] / averagePersonPerBuilding) for row in existing_shelters]
     capacity = [row["capacity"] for row in new_shelters] + [row["capacity"] for row in existing_shelters]
     model = Model("shelter_location")
-    model.setParam("Threads", 16)        # maksymalna liczba wątków
+    model.setParam("Threads", 16)        # liczba wątków
     model.setParam("ConcurrentMIP", 1)   # równoległy MIP
 
     x, y, z = {}, {}, {}
@@ -80,12 +78,12 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
 
     model.update()
 
+
     # funkcja celu
-    obj = (
-            quicksum(r[i, n] * x[(i, n)] for i in range(s + e) for n in range(h))
-            + quicksum(c[i] * y[i] for i in range(s + e))
-            + quicksum(K * z[n] for n in range(h))
-    )
+    F1 = quicksum(r[i, n] * x[(i, n)] for i in range(s + e) for n in range(h))
+    F2 = quicksum(c[i] * y[i] for i in range(s + e))
+    F3 = quicksum(K * z[n] for n in range(h))
+    obj = (w1 * F1 + w2 * F2 + w3 * F3)
     model.setObjective(obj, GRB.MINIMIZE)
 
     # ograniczenia – każdy obiekt przypisany dokładnie do 1 schronu
@@ -107,7 +105,6 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
 
     for i in range(s, s + e):
         model.addConstr(y[i] == 1)
-
     model.optimize()
 
     if model.status == GRB.OPTIMAL:
