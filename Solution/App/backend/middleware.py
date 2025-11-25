@@ -1,9 +1,5 @@
-from pydantic import BaseModel
 from jose import JWTError, jwt
-from datetime import datetime, timedelta
-from fastapi.security import OAuth2PasswordBearer
-from fastapi import HTTPException, status
-from Solution.App.backend.models import user_service as us
+from  models import user_service as us
 
 
 

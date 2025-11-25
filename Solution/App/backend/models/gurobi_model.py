@@ -20,7 +20,8 @@ def haversine_gpu(lats1, lons1, lats2, lons2):
     return R * c
 
 
-def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonPerBuilding: int):
+def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonPerBuilding: int,
+                           weight_1: int, weight_2: int, weight_3: int):
     start = time.time()
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -40,7 +41,6 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
     ids_existing = [row["id"] for row in existing_shelters]
     ids_new = [row["id"] for row in new_shelters]
     ids_res = [row["id"] for row in residential_buildings]
-
     L_existing = np.array([[row["x"], row["y"]] for row in existing_shelters])
     L_new = np.array([[row["x"], row["y"]] for row in new_shelters])
     L = np.vstack([L_new, L_existing])
@@ -50,7 +50,8 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
     h = len(residential_buildings)
     p = budget
     K = 100
-    w1, w2, w3 = 0.5, 0.1, 0.4
+    w1, w2, w3 = weight_1, weight_2, weight_3
+    n_1, n_2, n_3 = h * allowedDistance, p*1000000 , h * K
     M = np.array([[row["x"], row["y"]] for row in residential_buildings])
 
     r_gpu = haversine_gpu(
@@ -79,11 +80,12 @@ def get_shelter_allocation(budget: float, allowedDistance: float, averagePersonP
     model.update()
 
 
+
     # funkcja celu
     F1 = quicksum(r[i, n] * x[(i, n)] for i in range(s + e) for n in range(h))
     F2 = quicksum(c[i] * y[i] for i in range(s + e))
     F3 = quicksum(K * z[n] for n in range(h))
-    obj = (w1 * F1 + w2 * F2 + w3 * F3)
+    obj = (w1 * (F1/n_1) + w2 * (F2/n_2) + w3 * (F3/n_3))
     model.setObjective(obj, GRB.MINIMIZE)
 
     # ograniczenia – każdy obiekt przypisany dokładnie do 1 schronu

@@ -35,6 +35,9 @@ export interface ShelterAllocationRequest {
   model: string;
   allowedDistance: number;
   averagePersonPerBuilding: number;
+  weight_1: number;
+  weight_2: number;
+  weight_3: number;
 }
 
 export interface AddShelterRequest {

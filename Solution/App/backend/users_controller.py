@@ -1,10 +1,7 @@
 from fastapi import APIRouter
 from fastapi import HTTPException, status
 from pydantic import BaseModel
-from Solution.App.backend.models import qubo_model_dwave as qubo, gurobi_model as gurobi, user_service as us
-from jose import JWTError, jwt
-from datetime import datetime, timedelta
-from fastapi.security import OAuth2PasswordBearer
+from models import qubo_model_dwave as qubo, gurobi_model as gurobi, user_service as us
 import middleware as mid
 
 class VerifyRequest(BaseModel):

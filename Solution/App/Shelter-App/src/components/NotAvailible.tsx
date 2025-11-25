@@ -11,7 +11,11 @@ const NotAvailible: React.FC<ProtectedNotAvailibleProps> = ({ children }) => {
   const [isLogged, setIsLogged] = useState<boolean>(true);
   
   useEffect(() => {
+    const intervalId = setInterval(() => {
+    }, 10 * 60 * 1000);
     const verifyUser = async () => {
+
+      
       let token = sessionStorage.getItem("token");
       const refreshToken = sessionStorage.getItem("refresh_token");
 
@@ -36,7 +40,8 @@ const NotAvailible: React.FC<ProtectedNotAvailibleProps> = ({ children }) => {
         setIsLogged(false);
       }
     };
-      verifyUser();
+    verifyUser();
+    return () => clearInterval(intervalId)
   }, []);
 
   if (!isLogged) {

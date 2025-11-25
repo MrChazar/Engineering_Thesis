@@ -1,6 +1,4 @@
 import sqlite3
-import hashlib
-import os
 
 DB_PATH = r"C:\Users\jakub\Documents\GitHub\Engineering_Thesis\Solution\App\backend\models\data\database.db"
 

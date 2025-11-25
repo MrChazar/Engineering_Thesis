@@ -11,10 +11,13 @@ function App() {
   
   // states for handling data
   const [form, setForm] = useState({
-    model: "",
+    model: "GUROBI",
     budget: "",
     allowedDistance: "",
-    averagePersonPerBuilding: ""
+    averagePersonPerBuilding: "",
+    weight_1: "0.33",
+    weight_2: "0.33",
+    weight_3: "0.33"
   });
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -22,6 +25,7 @@ function App() {
   const [loadingText, setLoadingText] = useState<string>("Ładowanie");
   const [error, setError] = useState<string | null>(null);
   const [allocations, setAllocations] = useState<ShelterAllocationResponse | any>();
+  const currentWeightsSum = (parseFloat(form.weight_1)||0) + (parseFloat(form.weight_2)||0) + (parseFloat(form.weight_3)||0);
 
   useEffect(() => {
     if(!loading)
@@ -70,6 +74,25 @@ function App() {
     reader.readAsText(file);
   };
 
+  const handleWeightChange = (key: 'weight_1' | 'weight_2' | 'weight_3', value: string) => {
+    let newVal = parseFloat(value);
+    if (isNaN(newVal)) newVal = 0;
+
+    const w1 = key === 'weight_1' ? 0 : parseFloat(form.weight_1) || 0;
+    const w2 = key === 'weight_2' ? 0 : parseFloat(form.weight_2) || 0;
+    const w3 = key === 'weight_3' ? 0 : parseFloat(form.weight_3) || 0;
+
+    const currentSumOfOthers = w1 + w2 + w3;
+    const maxAllowed = 1.0 - currentSumOfOthers;
+
+    if (newVal > maxAllowed) {
+      newVal = parseFloat(maxAllowed.toFixed(2));
+      if (newVal < 0) newVal = 0;
+    }
+
+    setForm(prev => ({ ...prev, [key]: newVal.toString() }));
+  };
+
   const handleSaveClick = () => {
     if (!allocations) return;
     const blob = new Blob([JSON.stringify(allocations, null, 2)], { type: "application/json" });
@@ -105,6 +128,10 @@ function App() {
       if (form.averagePersonPerBuilding && Number(form.averagePersonPerBuilding) <= 0) errors.push("Średnia liczba osób nie może być mniejsza/równa zero");
       if (form.allowedDistance && Number(form.allowedDistance) <= 0) errors.push("Maksymalna odległość nie może być mniejsza/równa zero");
       if (form.budget && Number(form.budget) < 0) errors.push("Budżet nie może być mniejszy od zera");
+      if(!form.weight_1 || !form.weight_2 || !form.weight_3)
+      {
+        errors.push("Nie wypełniono priorytetów")
+      }
 
       if (errors.length > 0) {
         throw new Error(errors.join(" | "));
@@ -116,6 +143,9 @@ function App() {
         model: form.model,
         allowedDistance: parseFloat(form.allowedDistance),
         averagePersonPerBuilding: parseInt(form.averagePersonPerBuilding),
+        weight_1: parseFloat(form.weight_1),
+        weight_2: parseFloat(form.weight_2),
+        weight_3: parseFloat(form.weight_3),
       };
 
       const response = await apiService.getShelterAllocations(request);
@@ -172,7 +202,7 @@ function App() {
                   max={1000}
                   step={0.1}
                 />
-
+                
                 <input
                   type="number"
                   placeholder="Średnia liczba osób (os)"
@@ -184,15 +214,64 @@ function App() {
                   step={1}
                 />
 
-                <select
-                  className="rounded-full px-4 py-2 text-center text-gray-700 bg-white"
-                  onChange={(e) => setForm({ ...form, model: e.target.value })}
-                >
-                  <option value="">Wybierz model</option>
-                  <option value="QUBO">QUBO</option>
-                  <option value="GUROBI">GUROBI</option>
-                </select>
+                <div className="bg-white p-4 rounded-xl border border-gray-200 mt-2">
+                    <div className="flex justify-between items-center mb-4 border-b border-gray-200 pb-2">
+                        <span className="text-sm font-bold text-black uppercase">Priorytety</span>
+                        <span className={`text-xs font-mono font-bold px-2 py-1 rounded ${currentWeightsSum > 1 ? 'bg-red-100 text-red-600' : 'bg-primary text-white'}`}>
+                            SUMA: {currentWeightsSum.toFixed(2)}
+                        </span>
+                    </div>
 
+                    <div className="flex flex-col gap-4">
+                        <div>
+                            <div className="flex justify-between items-end mb-1">
+                                <label className="text-xs font-bold text-gray-800">BLISKOŚĆ SCHRONÓW</label>
+                                <span className="text-xs font-mono text-gray-500 bg-white px-1 rounded border">{form.weight_1}</span>
+                            </div>
+                            <input
+                            type="range"
+                            className="w-full accent-black cursor-pointer h-2 bg-gray-200 rounded-lg appearance-none"
+                            value={form.weight_1}
+                            onChange={(e) => handleWeightChange('weight_1', e.target.value)}
+                            min={0.01}
+                            max={1}
+                            step={0.01}
+                            />
+                        </div>
+
+                        <div>
+                            <div className="flex justify-between items-end mb-1">
+                                <label className="text-xs font-bold text-gray-800">OSZCZĘDNOŚĆ BUDŻETU</label>
+                                <span className="text-xs font-mono text-gray-500 bg-white px-1 rounded border">{form.weight_2}</span>
+                            </div>
+                            <input
+                            type="range"
+                            className="w-full accent-black cursor-pointer h-2 bg-gray-200 rounded-lg appearance-none"
+                            value={form.weight_2}
+                            onChange={(e) => handleWeightChange('weight_2', e.target.value)}
+                            min={0.01}
+                            max={1}
+                            step={0.01}
+                            />
+                        </div>
+
+                        <div>
+                            <div className="flex justify-between items-end mb-1">
+                                <label className="text-xs font-bold text-gray-800">POWSZECHNOŚĆ DOSTĘPU</label>
+                                <span className="text-xs font-mono text-gray-500 bg-white px-1 rounded border">{form.weight_3}</span>
+                            </div>
+                            <input
+                            type="range"
+                            className="w-full accent-black cursor-pointer h-2 bg-gray-200 rounded-lg appearance-none"
+                            value={form.weight_3}
+                            onChange={(e) => handleWeightChange('weight_3', e.target.value)}
+                            min={0.01}
+                            max={1}
+                            step={0.01}
+                            />
+                        </div>
+                    </div>
+                </div>
                 <button
                   type="submit"
                   className="mt-4 rounded-full bg-black text-primary py-2 font-bold transition hover:bg-gray-800"
@@ -238,44 +317,60 @@ function App() {
 
             {allocations?.objective && (
               <>
-                <div className="bg-white rounded-2xl grid grid-cols-2 shadow-md m-2 p-4">
+              <div className="mt-4 animate-fade-in-up">
+                <div className="bg-white rounded-2xl grid grid-cols-2 gap-8 shadow-sm border border-gray-200 p-6">
                   <div>
-                    <h2 className="text-gray-800 font-semibold text-lg mb-2">Wyniki optymalizacji</h2>
-                    <p className="text-gray-700 text-base">
-                      <span className="font-bold text-black">Wartość funkcji celu:</span> {allocations.objective.toFixed(2)}
-                    </p>
-                    <p className="text-gray-700 text-base">
-                      <span className="font-bold text-black">Użyty budżet:</span> {(allocations.used_budget*1000000).toLocaleString()} zł
-                    </p>
-                    <p className="text-gray-700 text-base">
-                      <span className="font-bold text-black">Proces zajął:</span> {(allocations.time).toLocaleString()} minut
-                    </p>
+                    <h2 className="text-gray-800 font-extrabold text-sm uppercase mb-4 border-b pb-2 tracking-wider">Parametry Wynikowe</h2>
+                    <div className="space-y-3">
+                        <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                            <span className="text-gray-600 text-sm">Funkcja celu:</span> 
+                            <span className="font-mono font-bold text-black text-lg">{allocations.objective.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                            <span className="text-gray-600 text-sm">Użyty budżet:</span> 
+                            <span className="font-mono font-bold text-black text-lg">{(allocations.used_budget).toLocaleString()} mln zł</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                            <span className="text-gray-600 text-sm">Czas obliczeń:</span> 
+                            <span className="font-mono font-bold text-black text-lg">{(allocations.time).toLocaleString()} min</span>
+                        </div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <h2 className="text-gray-800 font-semibold text-lg mb-2">Statystyki</h2>
-                    <p className="text-gray-700 text-base">
-                      <span className="font-bold text-black">Ilość obsłużonych mieszkańców:</span> {allocations.stats.covered_population}
-                    </p>
-                    <p className="text-gray-700 text-base">
-                      <span className="font-bold text-black">Procent obsłużonych mieszkańców:</span> {allocations.stats.percent_covered} %
-                    </p>
-                    <p className="text-gray-700 text-base">
-                      <span className="font-bold text-black">Średnia odległość do schronu:</span> {allocations.stats.average_distance} km
-                    </p>
-                    <p className="text-gray-700 text-base">
-                      <span className="font-bold text-black">Całkowity koszt wybudowanych schronów:</span> {allocations.stats.total_built_cost*1000000} zł
-                    </p>
-                    <p className="text-gray-700 text-base">
-                      <span className="font-bold text-black">Średni koszt budowy:</span> {allocations.stats.average_cost_built*1000000} zł
-                    </p>
-                    <p className="text-gray-700 text-base">
-                      <span className="font-bold text-black">Wybudowane schrony:</span> {allocations.stats.built_shelters}
-                    </p>
-                    <p className="text-gray-700 text-base">
-                      <span className="font-bold text-black">Procent zapełnienia schronów:</span> {allocations.stats.capacity_fill_percent} %
-                    </p>
-                    <button  onClick={handleSaveClick} className="bg-black text-primary">Zapisz Konfiguracje</button>
+                  <div className="flex flex-col justify-between">
+                    <div>
+                        <h2 className="text-gray-800 font-extrabold text-sm uppercase mb-4 border-b pb-2 tracking-wider">Statystyki Kluczowe</h2>
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600 text-sm">Pokrycie populacji:</span>
+                                <div className="text-right">
+                                    <span className="font-bold text-green-600 text-lg">{allocations.stats.percent_covered} %</span>
+                                    <span className="text-xs text-gray-400 block">({allocations.stats.covered_population.toLocaleString()} os.)</span>
+                                </div>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600 text-sm">Średnia odległość do schronu:</span>
+                                <span className="font-bold text-black">{allocations.stats.average_distance} km</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600 text-sm">Wybudowane schrony:</span>
+                                <span className="font-bold text-black">{allocations.stats.built_shelters}</span>
+                            </div>
+                             <div className="flex justify-between items-center">
+                                <span className="text-gray-600 text-sm">Średni koszt budowy:</span>
+                                <span className="font-bold text-black">{allocations.stats.average_cost_built*1000000} zł</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600 text-sm">Procent zapełnienia schronów:</span>
+                                <span className="font-bold text-green-600 text-lg">{allocations.stats.capacity_fill_percent} %</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button onClick={handleSaveClick} className="mt-4 bg-black text-primary py-3 px-6 rounded-full text-sm font-bold hover:bg-gray-800 transition shadow-lg flex items-center justify-center gap-2 w-full">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        ZAPISZ KONFIGURACJE
+                    </button>
                   </div>
+                </div> 
               </div> 
               </>
             )}
