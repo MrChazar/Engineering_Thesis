@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi import HTTPException, status
 from pydantic import BaseModel
-from models import qubo_model_dwave as qubo, gurobi_model as gurobi, user_service as us
+from models import gurobi_model as gurobi, user_service as us
 import middleware as mid
 
 class VerifyRequest(BaseModel):

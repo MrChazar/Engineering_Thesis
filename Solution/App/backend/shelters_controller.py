@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from models import qubo_model_dwave as qubo, gurobi_model as gurobi, shelter_service as ss
+from models import  gurobi_model as gurobi, shelter_service as ss
 from pydantic import BaseModel
 import middleware as mid
 from fastapi import HTTPException, status
