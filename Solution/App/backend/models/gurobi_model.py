@@ -3,8 +3,10 @@ import sqlite3
 import time
 import cupy as cp
 from gurobipy import Model, GRB, quicksum
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "data", "database.db")
 
-DB_PATH = r"C:\Users\jakub\Documents\GitHub\Engineering_Thesis\Solution\App\backend\models\data\database.db"
 
 def haversine_gpu(lats1, lons1, lats2, lons2):
     R = 6371.0  # km

@@ -5,8 +5,11 @@ import datetime
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 
-DB_PATH = r"C:\Users\jakub\Documents\GitHub\Engineering_Thesis\Solution\App\backend\models\data\database.db"
-SECRET_KEY = "JAN_PAWEŁ_DRUGI"
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "data", "database.db")
+
+SECRET_KEY = "KLUCZ_TAJNY"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 REFRESH_TOKEN_EXPIRE_DAYS = 2
